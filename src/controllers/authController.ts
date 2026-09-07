@@ -108,7 +108,7 @@ export async function changeUserPassword(
   }
 
   await changePassword({
-    userId: req.user.userId,
+    userId: req.user!.userId,
     currentPassword,
     newPassword,
   });
@@ -170,7 +170,7 @@ export async function me(
 ): Promise<void> {
   const userId = req.user?.userId;
 
-  const user = await getCurrentUser(req.user.userId);
+  const user = await getCurrentUser(req.user!.userId);
 
   res.status(200).json(user);
 }
