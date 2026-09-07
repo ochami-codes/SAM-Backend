@@ -12,7 +12,7 @@ export async function inviteAdministrator(
 
   await inviteAdmin({
     email,
-    invitedBy: req.user.userId,
+    invitedBy: req.user!.userId,
   });
 
   res.status(201).json({
