@@ -1,11 +1,12 @@
 import mongoose, {
   Schema,
   type InferSchemaType,
+  type Model,
 } from "mongoose";
 
 const refreshSessionSchema = new Schema(
   {
-sessionId: {
+    sessionId: {
       type: String,
       required: true,
       unique: true,
@@ -33,6 +34,7 @@ sessionId: {
   }
 );
 
+// TTL index for automatic expiration
 refreshSessionSchema.index(
   { expiresAt: 1 },
   { expireAfterSeconds: 0 }
@@ -41,6 +43,9 @@ refreshSessionSchema.index(
 export type RefreshSession =
   InferSchemaType<typeof refreshSessionSchema>;
 
-export const RefreshSessionModel =
-  mongoose.models.RefreshSession ||
-  mongoose.model("RefreshSession", refreshSessionSchema);
+export const RefreshSessionModel: Model<RefreshSession> =
+  (mongoose.models.RefreshSession as Model<RefreshSession>) ||
+  mongoose.model<RefreshSession>(
+    "RefreshSession",
+    refreshSessionSchema
+  );

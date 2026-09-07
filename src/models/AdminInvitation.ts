@@ -1,6 +1,7 @@
 import mongoose, {
   Schema,
   type InferSchemaType,
+  type Model,
 } from "mongoose";
 
 const adminInvitationSchema = new Schema(
@@ -45,9 +46,9 @@ adminInvitationSchema.index(
 export type AdminInvitation =
   InferSchemaType<typeof adminInvitationSchema>;
 
-export const AdminInvitationModel =
-  mongoose.models.AdminInvitation ||
-  mongoose.model(
+export const AdminInvitationModel: Model<AdminInvitation> =
+  (mongoose.models.AdminInvitation as Model<AdminInvitation>) ||
+  mongoose.model<AdminInvitation>(
     "AdminInvitation",
     adminInvitationSchema
   );

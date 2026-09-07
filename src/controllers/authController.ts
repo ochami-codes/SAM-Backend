@@ -9,8 +9,9 @@ import { resetPassword } from "../services/auth/resetPasswordService.ts";
 import { logoutUser } from "../services/auth/logoutService.ts";
 import { getCurrentUser } from "../services/auth/getCurrentUserService.ts";
 import { acceptAdminInvitation } from "../services/auth/adminInvitationAcceptanceService.ts";
+import  type{ AuthenticatedRequest } from "../middleware/authenticate.ts";
 export async function login(
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response
 ): Promise<void> {
   const { email, password } = req.body;
@@ -72,7 +73,7 @@ export async function refresh(
   });
 }
 export async function logout(
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response
 ): Promise<void> {
   const refreshToken = req.cookies.refreshToken;
@@ -93,7 +94,7 @@ export async function logout(
   });
 }
 export async function changeUserPassword(
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response
 ): Promise<void> {
   const { currentPassword, newPassword } = req.body;
@@ -164,12 +165,12 @@ export async function resetUserPassword(
   });
 }
 export async function me(
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response
 ): Promise<void> {
-  const userId = req.user?.userId
+  const userId = req.user?.userId;
 
-  const user = await getCurrentUser(userId);
+  const user = await getCurrentUser(req.user.userId);
 
   res.status(200).json(user);
 }

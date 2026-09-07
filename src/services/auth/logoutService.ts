@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 
-import { RefreshSessionModel } from "../../models/RefreshSession.ts";
+import { RefreshSessionModel } from "../../models/refreshSession.ts";
 
 export async function logoutUser(
   refreshToken: string

@@ -45,11 +45,6 @@ async function seedSuperAdmin(): Promise<void> {
       isActive: true,
       mustChangePassword: true,
     });
-
-    console.log("Super admin created successfully.");
-    console.log(`Email: ${user.email}`);
-    console.log(`Role: ${user.role}`);
-    console.log("Initial password must be changed after first login.");
   } catch (error) {
     console.error("Failed to seed super admin:", error);
     process.exitCode = 1;

@@ -1,23 +1,39 @@
 {
-  // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
-    "module": "node16",
     "target": "ES2020",
-    "types": [],
+    "module": "Node16",
+    "moduleResolution": "Node16",
+
+    "rootDir": ".",
+    "outDir": "./dist",
+
+    "types": ["node"],
+
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
-    "allowImportingTsExtensions": true,
-     "moduleResolution": "node16", 
-    // Stricter Typechecking Options
+
+    "rewriteRelativeImportExtensions": true,
+
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
     "strict": true,
-    "jsx": "react-jsx",
+
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
-    "skipLibCheck": true,
-  }
+    "skipLibCheck": true
+  },
+
+  "include": [
+    "server.ts",
+    "src/**/*.ts"
+  ],
+
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }
+
