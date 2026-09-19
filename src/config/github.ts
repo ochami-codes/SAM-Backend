@@ -18,7 +18,9 @@ if (!githubInstallationId) {
 }
 
 const githubPrivateKey = fs.readFileSync(
-  path.resolve("secrets/sam.pem"),
+  process.env.NODE_ENV === "production"
+    ? "/etc/secrets/sam.pem"
+    : path.resolve("secrets/sam.pem"),
   "utf8"
 );
 
