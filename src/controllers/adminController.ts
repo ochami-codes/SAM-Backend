@@ -8,9 +8,10 @@ export async function inviteAdministrator(
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> {
-  const { email } = req.body;
+  const { fullName, email } = req.body;
 
   await inviteAdmin({
+    fullName,
     email,
     invitedBy: req.user!.userId,
   });

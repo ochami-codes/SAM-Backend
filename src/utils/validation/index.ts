@@ -17,3 +17,14 @@ export {
   validatePassword,
   isValidPassword,
 } from "./password.ts";
+
+export {
+  validateContactName,
+  validateContactEmail,
+  validateContactSubject,
+  validateContactMessage,
+} from "./contact.ts";
+
+export {
+  validateObjectId,
+} from "./ObjectId.ts";

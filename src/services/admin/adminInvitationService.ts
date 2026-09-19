@@ -7,24 +7,32 @@ import { sendEmail } from "../../utils/email/sendEmail.ts";
 import { adminInvitationEmail } from "../../utils/email/templates/adminInvitationEmail.ts";
 import { AppError } from "../../errors/AppError.ts";
 
+import {
+  validateEmail,
+  validateString,
+} from "../../utils/validation/index.ts";
+
 interface InviteAdminInput {
+  fullName: string;
   email: string;
   invitedBy: string;
 }
 
 export async function inviteAdmin({
+  fullName,
   email,
   invitedBy,
 }: InviteAdminInput): Promise<void> {
-  const normalizedEmail = email.trim().toLowerCase();
+  const validatedName = validateString(
+    fullName,
+    "Full name",
+    {
+      minLength: 2,
+      maxLength: 100,
+    }
+  );
 
-  if (!normalizedEmail) {
-    throw new AppError(
-      "Email address is required",
-      400,
-      "VALIDATION_ERROR"
-    );
-  }
+  const normalizedEmail = validateEmail(email);
 
   /*
    * Check whether an account already exists.
@@ -51,7 +59,9 @@ export async function inviteAdmin({
   /*
    * Generate a cryptographically secure invitation token.
    */
-  const rawToken = crypto.randomBytes(32).toString("hex");
+  const rawToken = crypto
+    .randomBytes(32)
+    .toString("hex");
 
   /*
    * Store only the hash in MongoDB.
@@ -72,6 +82,7 @@ export async function inviteAdmin({
   );
 
   await AdminInvitationModel.create({
+    fullName: validatedName,
     email: normalizedEmail,
     tokenHash,
     invitedBy,
@@ -81,8 +92,10 @@ export async function inviteAdmin({
   const frontendUrl = process.env.FRONTEND_URL;
 
   if (!frontendUrl) {
-    throw new Error(
-      "FRONTEND_URL is not defined"
+    throw new AppError(
+      "FRONTEND_URL is not configured",
+      500,
+      "INTERNAL_SERVER_ERROR"
     );
   }
 
@@ -95,6 +108,7 @@ export async function inviteAdmin({
     `?token=${encodeURIComponent(rawToken)}`;
 
   const emailContent = adminInvitationEmail({
+    fullName: validatedName,
     invitationUrl,
     expiresInHours,
   });

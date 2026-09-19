@@ -1,5 +1,4 @@
-import dotenv from "dotenv";
-dotenv.config({ path: ".env" });
+import "dotenv/config";
 import app from "./src/app.ts";
 import { connectDatabase } from "./src/config/database.ts";
 const PORT: number = parseInt(process.env.PORT || "5000", 10);

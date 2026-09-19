@@ -1,9 +1,11 @@
 interface AdminInvitationEmailInput {
+  fullName: string;
   invitationUrl: string;
   expiresInHours: number;
 }
 
 export function adminInvitationEmail({
+  fullName,
   invitationUrl,
   expiresInHours,
 }: AdminInvitationEmailInput): {
@@ -60,6 +62,16 @@ export function adminInvitationEmail({
               >
                 Administrator Invitation
               </h1>
+
+              <p
+                style="
+                  margin: 0 0 16px;
+                  font-size: 16px;
+                  line-height: 1.6;
+                "
+              >
+                Dear ${fullName},
+              </p>
 
               <p
                 style="
@@ -156,6 +168,8 @@ export function adminInvitationEmail({
 
     text: `
 Administrator Invitation
+
+Dear ${fullName},
 
 You have been invited to become an administrator
 of Second Advent Ministries.

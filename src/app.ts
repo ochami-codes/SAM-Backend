@@ -7,6 +7,11 @@ import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import authRoutes from "./routes/authRoutes.ts";
 import adminRoutes from "./routes/adminRoutes.ts";
+import contentAdminRoutes from "./routes/contentAdminRoutes.ts";
+import managedContentRoutes from "./routes/managedContentRoutes.ts";
+import contactRoutes from "./routes/contactRoutes.ts";
+import contactMessageAdminRoutes from "./routes/contactMessageAdminRoutes.ts";
+
 import { errorHandler } from "./middleware/errorHandler.ts";
 const app: Application = express();
 app.use(cookieParser());
@@ -38,6 +43,10 @@ if (process.env.NODE_ENV !== "production") {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/contact", contactRoutes);
+app.use("/api/admin/contact-messages", contactMessageAdminRoutes);
+app.use("/api/admin/content", contentAdminRoutes);
+app.use("/api/admin/managed-content", managedContentRoutes);
 
 /* -----------------------------------------
    Health Check

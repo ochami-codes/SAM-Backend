@@ -29,7 +29,7 @@
   "include": [
     "server.ts",
     "src/**/*.ts"
-  ],
+, "testGithub.ts"  ],
 
   "exclude": [
     "node_modules",

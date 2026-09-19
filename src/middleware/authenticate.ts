@@ -18,8 +18,6 @@ export function authenticate(
   next: NextFunction
 ): void {
   const authorization = req.headers.authorization;
-console.log("Authorization:", authorization);
-console.log("Headers:", req.headers);
   if (!authorization) {
     return next(
       new AppError(
