@@ -14,9 +14,7 @@ function isManagedContentSection(
 ): value is ManagedContentSection {
   return (
     typeof value === "string" &&
-    managedContentSections.includes(
-      value as ManagedContentSection
-    )
+    (managedContentSections as readonly string[]).includes(value)
   );
 }
 
