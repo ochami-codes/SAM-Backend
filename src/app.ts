@@ -13,6 +13,7 @@ import contactRoutes from "./routes/contactRoutes.ts";
 import contactMessageAdminRoutes from "./routes/contactMessageAdminRoutes.ts";
 
 import { errorHandler } from "./middleware/errorHandler.ts";
+import managedContentPublicRoutes from "./routes/managedContentPublicRoutes.ts";
 const app: Application = express();
 app.use(cookieParser());
 
@@ -45,6 +46,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/admin/contact-messages", contactMessageAdminRoutes);
+app.use("/api/content", managedContentPublicRoutes);
 app.use("/api/admin/content", contentAdminRoutes);
 app.use("/api/admin/managed-content", managedContentRoutes);
 

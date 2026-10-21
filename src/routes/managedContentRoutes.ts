@@ -19,16 +19,22 @@ const router = Router();
 router.use(authenticate);
 router.use(authorize("admin", "super_admin"));
 
+/* -------------------- List -------------------- */
+
 router.get(
   "/",
   asyncHandler(listManagedContentController)
 );
+
+/* -------------------- Create -------------------- */
 
 router.post(
   "/",
   asyncHandler(createManagedContentController)
 );
 
+/* -------------------- Read -------------------- */
+
 router.get(
   "/:section/:category/:slug",
   asyncHandler(getManagedContentController)
@@ -38,6 +44,8 @@ router.get(
   "/:section/:slug",
   asyncHandler(getManagedContentController)
 );
+
+/* -------------------- Update -------------------- */
 
 router.put(
   "/:section/:category/:slug",
@@ -49,6 +57,8 @@ router.put(
   asyncHandler(updateManagedContentController)
 );
 
+/* -------------------- Delete -------------------- */
+
 router.delete(
   "/:section/:category/:slug",
   asyncHandler(deleteManagedContentController)
@@ -58,6 +68,8 @@ router.delete(
   "/:section/:slug",
   asyncHandler(deleteManagedContentController)
 );
+
+/* -------------------- Publish -------------------- */
 
 router.patch(
   "/:section/:category/:slug/publish",
@@ -68,6 +80,8 @@ router.patch(
   "/:section/:slug/publish",
   asyncHandler(publishManagedContentController)
 );
+
+/* -------------------- Unpublish -------------------- */
 
 router.patch(
   "/:section/:category/:slug/unpublish",

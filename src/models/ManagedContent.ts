@@ -1,14 +1,5 @@
 import mongoose, { Schema, type Model } from "mongoose";
-
-export const managedContentSections = [
-  "articles",
-  "bible-study",
-  "family",
-  "health",
-] as const;
-
-export type ManagedContentSection =
-  (typeof managedContentSections)[number];
+import type { ManagedContentSection } from "../types/content/managedContent.ts";
 
 export const managedContentStatuses = [
   "draft",
@@ -24,7 +15,9 @@ export interface IManagedContent {
   section: ManagedContentSection;
   category?: string;
   content: string;
+  description?: string;
   heroImage?: string;
+  order?: number;
   status: ManagedContentStatus;
   createdBy: mongoose.Types.ObjectId;
   updatedBy: mongoose.Types.ObjectId;
@@ -54,7 +47,9 @@ const managedContentSchema =
       section: {
         type: String,
         required: true,
-        enum: managedContentSections,
+        trim: true,
+        lowercase: true,
+        maxlength: 50,
       },
 
       category: {
@@ -73,6 +68,16 @@ const managedContentSchema =
         type: String,
         trim: true,
       },
+      order: {
+  type: Number,
+  required: true,
+  default: 0,
+  min: 0,
+  validate: {
+    validator: Number.isInteger,
+    message: "Content order must be an integer",
+  },
+},
 
       status: {
         type: String,
@@ -111,6 +116,7 @@ managedContentSchema.index({
   status: 1,
   section: 1,
   category: 1,
+  order: 1
 });
 
 const existingManagedContentModel =

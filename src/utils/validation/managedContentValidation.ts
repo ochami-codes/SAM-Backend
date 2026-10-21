@@ -1,10 +1,12 @@
 import { AppError } from "../../errors/AppError.ts";
 import {
-  managedContentSections,
   managedContentStatuses,
-  type ManagedContentSection,
   type ManagedContentStatus,
 } from "../../models/ManagedContent.ts";
+import {
+  managedContentSections,
+  type ManagedContentSection
+} from "../../types/content/managedContent.ts";
 import { validateObject } from "./object.ts";
 import { validateString } from "./string.ts";
 
@@ -20,7 +22,9 @@ export interface CreateManagedContentBody {
   section: ManagedContentSection;
   category?: string;
   content: string;
+  description?: string;
   heroImage?: string;
+  order?: number;
   status: ManagedContentStatus;
 }
 
@@ -30,7 +34,9 @@ export interface UpdateManagedContentBody {
   section: ManagedContentSection;
   category?: string;
   content: string;
+  description?: string;
   heroImage?: string;
+  order?: number;
 }
 
 export function validateManagedContentIdentifier(
@@ -75,8 +81,9 @@ export function validateCreateManagedContentBody(
 ): CreateManagedContentBody {
   const data = validateObject(body);
 
-  const section =
-    validateManagedContentSection(data.section);
+  const section = validateManagedContentSection(
+    data.section
+  );
 
   const title = validateString(data.title, "title", {
     required: true,
@@ -98,11 +105,19 @@ export function validateCreateManagedContentBody(
     trim: false,
   });
 
+  const description = validateOptionalString(
+    data.description,
+    "description",
+    500
+  );
+
   const heroImage = validateOptionalString(
     data.heroImage,
     "heroImage",
     500
   );
+
+  const order = validateOptionalOrder(data.order);
 
   const status = validateManagedContentStatus(
     data.status ?? "draft"
@@ -114,7 +129,9 @@ export function validateCreateManagedContentBody(
     section,
     ...(category && { category }),
     content,
-    ...(heroImage && { heroImage }),
+    ...(description !== undefined && { description }),
+    ...(heroImage !== undefined && { heroImage }),
+    ...(order !== undefined && { order }),
     status,
   };
 }
@@ -152,6 +169,7 @@ export function validateUpdateManagedContentBody(
     "heroImage",
     500
   );
+  const order = validateOptionalOrder(data.order);
 
   return {
     title,
@@ -160,6 +178,7 @@ export function validateUpdateManagedContentBody(
     ...(category && { category }),
     content,
     ...(heroImage && { heroImage }),
+    ...(order !== undefined && { order }),
   };
 }
 
@@ -172,19 +191,21 @@ export function validateManagedContentSection(
     maxLength: 50,
   });
 
-  if (
-    !managedContentSections.includes(
-      section as ManagedContentSection
-    )
-  ) {
+  // Normalize the section identifier.
+  const normalizedSection = section
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-");
+
+  // Only allow URL-friendly section identifiers.
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(normalizedSection)) {
     throw new AppError(
-      "Invalid content section",
-      400,
-      "INVALID_CONTENT_SECTION"
+      "Invalid content section. Use letters, numbers, and hyphens.",
+      400
     );
   }
 
-  return section as ManagedContentSection;
+  return normalizedSection;
 }
 
 export function validateManagedContentStatus(
@@ -229,26 +250,51 @@ function validateManagedContentCategory(
 
   return validateSlug(value, "category");
 }
-
 function validateSlug(
   value: unknown,
   fieldName = "slug"
 ): string {
-  const slug = validateString(value, fieldName, {
+  const rawSlug = validateString(value, fieldName, {
     required: true,
     minLength: 1,
     maxLength: 200,
   });
 
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+  const slug = rawSlug
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  if (!slug) {
     throw new AppError(
-      `${fieldName} must contain only lowercase letters, numbers, and hyphens`,
+      `${fieldName} must contain at least one letter or number`,
       400,
       "INVALID_SLUG"
     );
   }
 
   return slug;
+}
+export function validateOptionalOrder(
+  value: unknown
+): number | undefined {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+
+  if (
+    typeof value !== "number" ||
+    !Number.isInteger(value) ||
+    value < 0
+  ) {
+    throw new AppError(
+      "Order must be a non-negative integer.",
+      400
+    );
+  }
+
+  return value;
 }
 
 function validateOptionalString(
