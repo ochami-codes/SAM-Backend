@@ -11,7 +11,7 @@ import contentAdminRoutes from "./routes/contentAdminRoutes.ts";
 import managedContentRoutes from "./routes/managedContentRoutes.ts";
 import contactRoutes from "./routes/contactRoutes.ts";
 import contactMessageAdminRoutes from "./routes/contactMessageAdminRoutes.ts";
-
+import cloudinaryRoutes from "./routes/cloudinaryRoutes.ts";
 import { errorHandler } from "./middleware/errorHandler.ts";
 import managedContentPublicRoutes from "./routes/managedContentPublicRoutes.ts";
 const app: Application = express();
@@ -49,6 +49,7 @@ app.use("/api/admin/contact-messages", contactMessageAdminRoutes);
 app.use("/api/content", managedContentPublicRoutes);
 app.use("/api/admin/content", contentAdminRoutes);
 app.use("/api/admin/managed-content", managedContentRoutes);
+app.use("/api/media", cloudinaryRoutes);
 
 /* -----------------------------------------
    Health Check
