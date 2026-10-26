@@ -8,42 +8,119 @@ import {
 } from "../services/media/cloudinaryService.ts";
 import { ManagedContentModel } from "../models/ManagedContent.ts";
 
-export const getCloudinaryMedia = asyncHandler(async (req, res) => {
-  const rawLimit = req.query.limit;
-  const rawCursor = req.query.nextCursor;
+export const getCloudinaryMedia = asyncHandler(
+  async (req, res) => {
+    const rawLimit = req.query.limit;
+    const rawCursor = req.query.nextCursor;
 
-  const limit = rawLimit === undefined ? 24 : Number(rawLimit);
+    const limit =
+      rawLimit === undefined ? 24 : Number(rawLimit);
 
-  if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
-    res.status(400).json({
-      success: false,
-      message: "Limit must be an integer between 1 and 100.",
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+      res.status(400).json({
+        success: false,
+        message: "Limit must be an integer between 1 and 100.",
+      });
+      return;
+    }
+
+    if (
+      rawCursor !== undefined &&
+      (typeof rawCursor !== "string" || rawCursor.length > 2048)
+    ) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid pagination cursor.",
+      });
+      return;
+    }
+
+    const media = await listCloudinaryMedia(
+      limit,
+      typeof rawCursor === "string"
+        ? rawCursor
+        : undefined
+    );
+
+    const publicIds = media.items.map(
+      (item) => item.public_id
+    );
+
+    const escapedPublicIds = publicIds.map((publicId) =>
+      publicId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    );
+
+    const contentItems =
+      publicIds.length > 0
+        ? await ManagedContentModel.find({
+            $or: [
+              { heroImage: { $in: publicIds } },
+              ...escapedPublicIds.map(
+                (publicId) => ({
+                  heroImage: {
+                    $regex: `/${publicId}(?:\\.[^/?#]+)?(?:[?#]|$)`,
+                    $options: "i",
+                  },
+                })
+              ),
+            ],
+          })
+            .select("_id title slug section category heroImage")
+            .lean()
+        : [];
+
+    const items = media.items.map((item) => {
+      const usedBy = contentItems
+        .filter((content) => {
+          if (!content.heroImage) {
+            return false;
+          }
+
+          if (content.heroImage === item.public_id) {
+            return true;
+          }
+
+          try {
+            const imageUrl = new URL(content.heroImage);
+            const imagePath = decodeURIComponent(
+              imageUrl.pathname
+            );
+
+            return (
+              imagePath.includes(
+                `/${item.public_id}.`
+              ) ||
+              imagePath.endsWith(
+                `/${item.public_id}`
+              )
+            );
+          } catch {
+            return false;
+          }
+        })
+        .map((content) => ({
+          id: content._id.toString(),
+          title: content.title,
+          slug: content.slug,
+          section: content.section,
+          category: content.category,
+        }));
+
+      return {
+        ...item,
+        usedBy,
+      };
     });
-    return;
-  }
 
-  if (
-    rawCursor !== undefined &&
-    (typeof rawCursor !== "string" || rawCursor.length > 2048)
-  ) {
-    res.status(400).json({
-      success: false,
-      message: "Invalid pagination cursor.",
+    res.status(200).json({
+      success: true,
+      data: {
+        ...media,
+        items,
+      },
     });
-    return;
   }
-
-  const media = await listCloudinaryMedia(
-    limit,
-    typeof rawCursor === "string" ? rawCursor : undefined
-  );
-
-  res.status(200).json({
-    success: true,
-    data: media,
-  });
-});
-
+);
 export function createCloudinaryUploadSignatureController(
   _req: Request,
   res: Response
