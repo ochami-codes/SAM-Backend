@@ -91,3 +91,61 @@ export async function listCloudinaryMedia(
     nextCursor: result.next_cursor ?? null,
   };
 }
+export interface CloudinaryAssetDetails {
+  publicId: string;
+  secureUrl: string;
+}
+
+export async function getCloudinaryAsset(
+  publicId: string
+): Promise<CloudinaryAssetDetails | null> {
+  const normalizedPublicId = publicId.trim();
+
+  if (
+    !normalizedPublicId.startsWith("sam/") ||
+    normalizedPublicId.length <= 4 ||
+    normalizedPublicId.includes("..")
+  ) {
+    throw new Error("Invalid Cloudinary public ID.");
+  }
+
+  try {
+    const asset = await cloudinary.api.resource(normalizedPublicId, {
+      resource_type: "image",
+    });
+
+    return {
+      publicId: asset.public_id,
+      secureUrl: asset.secure_url,
+    };
+  } catch (error: unknown) {
+    const cloudinaryError = error as {
+      http_code?: number;
+    };
+
+    if (cloudinaryError.http_code === 404) {
+      return null;
+    }
+
+    throw error;
+  }
+}
+
+export async function deleteCloudinaryMedia(
+  publicId: string
+): Promise<{ result: string }> {
+  const asset = await getCloudinaryAsset(publicId);
+
+  if (!asset) {
+    throw new Error("Cloudinary image not found.");
+  }
+
+  const result = await cloudinary.uploader.destroy(asset.publicId, {
+    resource_type: "image",
+    invalidate: true,
+  });
+
+  return {
+    result: result.result,
+  };
+}
