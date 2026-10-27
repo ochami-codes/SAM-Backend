@@ -26,7 +26,7 @@ app.use(helmet());
    CORS
 ----------------------------------------- */
 const corsOptions: CorsOptions = {
-  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  origin: process.env.FRONTEND_URL || "http://localhost:3000" || "https://second-advent-ministries.co.ke",
   credentials: true,
 };
 
