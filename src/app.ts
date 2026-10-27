@@ -25,12 +25,38 @@ app.use(helmet());
 /* -----------------------------------------
    CORS
 ----------------------------------------- */
+/* -----------------------------------------
+   CORS - Fixed for second-advent-ministries.co.ke
+----------------------------------------- */
+const allowedOrigins = [
+  "https://second-advent-ministries.co.ke",
+  "https://www.second-advent-ministries.co.ke",
+  "http://localhost:3000",
+  "http://localhost:5173"
+];
+
+// If you have FRONTEND_URL in Render env, include it too
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
 const corsOptions: CorsOptions = {
-  origin: process.env.FRONTEND_URL || "http://localhost:3000" || "https://second-advent-ministries.co.ke" || "www.second-advent-ministries.co.ke",
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS blocked origin: ${origin}`);
+      callback(new Error(`Origin ${origin} not allowed by CORS`));
+    }
+  },
   credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
 };
 
 app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // <- Fixes Preflight
 
 /* -----------------------------------------
    Middleware
