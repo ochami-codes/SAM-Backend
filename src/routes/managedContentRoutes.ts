@@ -13,6 +13,7 @@ import {
 import { authenticate } from "../middleware/authenticate.ts";
 import { authorize } from "../middleware/authorize.ts";
 import { asyncHandler } from "../middleware/asyncHandler.ts";
+import { createManagedContentMetadataController, getAllManagedContentMetadataController, updateManagedContentMetadataController } from "../controllers/managedContentMetadataController.ts";
 
 const router = Router();
 
@@ -93,4 +94,30 @@ router.patch(
   asyncHandler(unpublishManagedContentController)
 );
 
+/* -------------------- Content Metadata -------------------- */
+
+// Create a custom section or category
+router.post(
+  "/metadata",
+  asyncHandler(createManagedContentMetadataController)
+);
+
+// Update a custom section
+router.patch(
+  "/metadata/sections/:slug",
+  asyncHandler(updateManagedContentMetadataController)
+);
+
+// Update a custom category
+router.patch(
+  "/metadata/sections/:sectionSlug/categories/:slug",
+  asyncHandler(updateManagedContentMetadataController)
+);
+/* -------------------- Content Metadata -------------------- */
+
+// Retrieve all custom sections and categories
+router.get(
+  "/metadata",
+  asyncHandler(getAllManagedContentMetadataController)
+);
 export default router;

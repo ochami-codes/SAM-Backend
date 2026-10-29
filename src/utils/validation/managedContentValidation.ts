@@ -250,7 +250,8 @@ function validateManagedContentCategory(
 
   return validateSlug(value, "category");
 }
-function validateSlug(
+
+export function validateSlug(
   value: unknown,
   fieldName = "slug"
 ): string {

@@ -7,12 +7,21 @@ import {
 import {
   getPublishedManagedContentController,
 } from "../controllers/getPublishedManagedContentController.ts";
-import { getManagedContentMetadataController } from "../controllers/managedContentMetadataController.ts";
+
+import {
+  getManagedContentMetadataController,
+} from "../controllers/managedContentMetadataController.ts";
+
 import { asyncHandler } from "../middleware/asyncHandler.ts";
 
 const router = Router();
 
-router.get("/metadata", asyncHandler(getManagedContentMetadataController));
+/* -------------------- Metadata -------------------- */
+
+router.get(
+  "/metadata",
+  asyncHandler(getManagedContentMetadataController)
+);
 
 /* -------------------- List -------------------- */
 

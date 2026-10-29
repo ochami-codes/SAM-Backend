@@ -5,18 +5,8 @@ import {
 } from "../services/content/managedContentService.ts";
 
 import {
-  managedContentSections,
-  type ManagedContentSection,
-} from "../types/content/managedContent.ts";
-
-function isManagedContentSection(
-  value: unknown
-): value is ManagedContentSection {
-  return (
-    typeof value === "string" &&
-    (managedContentSections as readonly string[]).includes(value)
-  );
-}
+  ContentMetadataModel,
+} from "../models/ContentMetadata.ts";
 
 export async function listPublishedManagedContentController(
   req: Request,
@@ -24,18 +14,44 @@ export async function listPublishedManagedContentController(
 ): Promise<void> {
   const { section, category } = req.params;
 
-  if (!isManagedContentSection(section)) {
+  if (typeof section !== "string" || !section.trim()) {
     res.status(400).json({
       success: false,
-      message: "Invalid content section",
+      message: "A valid content section is required",
     });
+    return;
+  }
 
+  const normalizedSection = section.trim().toLowerCase();
+  const normalizedCategory =
+    typeof category === "string"
+      ? category.trim().toLowerCase()
+      : undefined;
+
+  // Allow built-in sections and sections registered in metadata.
+  const isCustomSection = await ContentMetadataModel.exists({
+    type: "section",
+    slug: normalizedSection,
+  });
+
+  const isBuiltInSection = [
+    "articles",
+    "bible-study",
+    "family",
+    "health",
+  ].includes(normalizedSection);
+
+  if (!isBuiltInSection && !isCustomSection) {
+    res.status(404).json({
+      success: false,
+      message: "Content section not found",
+    });
     return;
   }
 
   const content = await listPublishedManagedContent(
-    section,
-    typeof category === "string" ? category : undefined
+    normalizedSection,
+    normalizedCategory
   );
 
   res.status(200).json({
