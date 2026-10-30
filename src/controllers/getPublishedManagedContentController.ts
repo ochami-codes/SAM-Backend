@@ -8,10 +8,17 @@ import {
   getPublishedManagedContent,
 } from "../services/content/managedContentService.ts";
 
+export async function getPublishedArticleController( req: Request, res: Response ): Promise<void> {
+   const identifier = validateManagedContentIdentifier( "articles", undefined, req.params.slug ); 
+   const content = await getPublishedManagedContent(identifier);
+    res.status(200).json({ success: true, data: content, });
+   }
+   
 export async function getPublishedManagedContentController(
   req: Request,
   res: Response
 ): Promise<void> {
+
   const identifier = validateManagedContentIdentifier(
     req.params.section,
     req.params.category,
@@ -21,9 +28,8 @@ export async function getPublishedManagedContentController(
   const content = await getPublishedManagedContent(
     identifier
   );
-
   res.status(200).json({
     success: true,
     data: content,
   });
-}
+}                   

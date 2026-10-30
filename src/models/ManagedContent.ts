@@ -63,6 +63,12 @@ const managedContentSchema =
         type: String,
         required: true,
       },
+      description: {
+  type: String,
+  trim: true,
+  maxlength: 300,
+  default: null,
+},
 
       heroImage: {
         type: String,

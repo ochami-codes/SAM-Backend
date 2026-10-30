@@ -82,6 +82,13 @@ export async function listPublishedManagedContent(
 export async function getPublishedManagedContent(
   identifier: ManagedContentIdentifier
 ): Promise<ManagedContentData> {
+
+const matchingDocuments = await ManagedContentModel.find({
+  section: identifier.section,
+  slug: identifier.slug,
+  status: "published",
+}).lean();
+
   const content = await ManagedContentModel.findOne({
     section: identifier.section,
     ...(identifier.category && {

@@ -4,7 +4,6 @@ import {
   type ManagedContentStatus,
 } from "../../models/ManagedContent.ts";
 import {
-  managedContentSections,
   type ManagedContentSection
 } from "../../types/content/managedContent.ts";
 import { validateObject } from "./object.ts";
@@ -44,9 +43,7 @@ export function validateManagedContentIdentifier(
   category: unknown,
   slug: unknown
 ): ManagedContentIdentifier {
-  const validatedSection =
-    validateManagedContentSection(section);
-
+  const validatedSection = validateManagedContentSection(section);
   const validatedSlug = validateSlug(slug);
 
   if (validatedSection === "articles") {
@@ -64,10 +61,7 @@ export function validateManagedContentIdentifier(
     };
   }
 
-  const validatedCategory = validateSlug(
-    category,
-    "category"
-  );
+  const validatedCategory = validateSlug(category, "category");
 
   return {
     section: validatedSection,
@@ -75,7 +69,6 @@ export function validateManagedContentIdentifier(
     slug: validatedSlug,
   };
 }
-
 export function validateCreateManagedContentBody(
   body: unknown
 ): CreateManagedContentBody {

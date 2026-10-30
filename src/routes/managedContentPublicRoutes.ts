@@ -5,47 +5,40 @@ import {
 } from "../controllers/managedContentPublicController.ts";
 
 import {
+  getPublishedArticleController,
   getPublishedManagedContentController,
 } from "../controllers/getPublishedManagedContentController.ts";
 
-import {
-  getManagedContentMetadataController,
-} from "../controllers/managedContentMetadataController.ts";
-
+import { getManagedContentMetadataController } from "../controllers/managedContentMetadataController.ts";
 import { asyncHandler } from "../middleware/asyncHandler.ts";
 
 const router = Router();
-
-/* -------------------- Metadata -------------------- */
 
 router.get(
   "/metadata",
   asyncHandler(getManagedContentMetadataController)
 );
 
-/* -------------------- List -------------------- */
+// Individual articles (without categories).
+router.get(
+  "/articles/:slug",
+  asyncHandler(getPublishedArticleController)
+);
 
+// Published content lists.
 router.get(
   "/:section",
   asyncHandler(listPublishedManagedContentController)
 );
-
-/* -------------------- Category List -------------------- */
 
 router.get(
   "/:section/:category",
   asyncHandler(listPublishedManagedContentController)
 );
 
-/* -------------------- Read -------------------- */
-
+// Individual categorized content.
 router.get(
   "/:section/:category/:slug",
-  asyncHandler(getPublishedManagedContentController)
-);
-
-router.get(
-  "/:section/:slug",
   asyncHandler(getPublishedManagedContentController)
 );
 
