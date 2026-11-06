@@ -16,6 +16,7 @@ import contentAdminRoutes from "./routes/contentAdminRoutes.ts";
 import managedContentRoutes from "./routes/managedContentRoutes.ts";
 import managedContentPublicRoutes from "./routes/managedContentPublicRoutes.ts";
 import cloudinaryRoutes from "./routes/cloudinaryRoutes.ts";
+import auditRoutes from "./routes/auditRoutes.ts";
 
 const app: Application = express();
 
@@ -74,6 +75,7 @@ app.use("/api/content", managedContentPublicRoutes);
 app.use("/api/admin/content", contentAdminRoutes);
 app.use("/api/admin/managed-content", managedContentRoutes);
 app.use("/api/media", cloudinaryRoutes);
+app.use("/api/audit", auditRoutes);
 
 /* Health Check */
 app.get("/api/health", (_req: Request, res: Response) => {

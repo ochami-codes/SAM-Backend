@@ -12,6 +12,9 @@ import {
   type ContentSection,
 } from "./contentPathResolver.ts";
 import { githubConfig } from "../../config/github.ts";
+import { createAuditLog } from "../audit/auditCreationService.ts";
+import mongoose from "mongoose";
+import { AUDIT_ACTIONS } from "../../constants/auditActions.ts";
 
 export interface UpdateContentInput {
   content: string;
@@ -30,6 +33,11 @@ export interface ContentListItem {
   slug: string;
   path: string;
   sha: string;
+}
+export interface GitHubContentAuditContext {
+  adminId: string;
+  ipAddress?: string;
+  userAgent?: string;
 }
 
 const contentRoot = "SAM-Frontend/sam-frontend/src/content";
@@ -50,31 +58,99 @@ export async function getContent(
 
 export async function updateContent(
   identifier: ContentIdentifier,
-  input: UpdateContentInput
+  input: UpdateContentInput,
+  auditContext: GitHubContentAuditContext
 ) {
   const path = resolveContentPath(identifier);
-
-  return updateGithubContent({
+  const contentMetadata = {
+  section: identifier.section,
+  slug: identifier.slug,
+  ...("category" in identifier && {
+    category: identifier.category,
+  }),
+};
+  const result = await updateGithubContent({
     path,
     content: input.content,
     sha: input.sha,
     message: input.message,
   });
-}
 
+  await createAuditLog({
+    actor: {
+      userId: new mongoose.Types.ObjectId(auditContext.adminId),
+    },
+    action: AUDIT_ACTIONS.CONTENT_UPDATED,
+    category: "content",
+    resource: {
+      type: "github_content",
+      id: result.path,
+    },
+    description: "Content updated in GitHub repository",
+    metadata: {
+  ...contentMetadata,
+  commitSha: result.commitSha,
+  fileSha: result.sha,
+  repository: `${githubConfig.owner}/${githubConfig.repo}`,
+  branch: githubConfig.branch,
+},
+    ...(auditContext.ipAddress !== undefined && {
+      ipAddress: auditContext.ipAddress,
+    }),
+    ...(auditContext.userAgent !== undefined && {
+      userAgent: auditContext.userAgent,
+    }),
+  });
+
+  return result;
+}
 export async function deleteContent(
   identifier: ContentIdentifier,
-  input: DeleteContentInput
+  input: DeleteContentInput,
+  auditContext: GitHubContentAuditContext
 ) {
   const path = resolveContentPath(identifier);
+  const contentMetadata = {
+  section: identifier.section,
+  slug: identifier.slug,
+  ...("category" in identifier && {
+    category: identifier.category,
+  }),
+};
 
-  return deleteGithubContent({
+  const result = await deleteGithubContent({
     path,
     sha: input.sha,
     message: input.message,
   });
-}
 
+  await createAuditLog({
+    actor: {
+      userId: new mongoose.Types.ObjectId(auditContext.adminId),
+    },
+    action: AUDIT_ACTIONS.CONTENT_DELETED,
+    category: "content",
+    resource: {
+      type: "github_content",
+      id: result.path,
+    },
+    description: "Content deleted from GitHub repository",
+    metadata: {
+  ...contentMetadata,
+  commitSha: result.commitSha,
+  repository: `${githubConfig.owner}/${githubConfig.repo}`,
+  branch: githubConfig.branch,
+},
+    ...(auditContext.ipAddress !== undefined && {
+      ipAddress: auditContext.ipAddress,
+    }),
+    ...(auditContext.userAgent !== undefined && {
+      userAgent: auditContext.userAgent,
+    }),
+  });
+
+  return result;
+}
 export async function listContent(): Promise<ContentListItem[]> {
   const sections = await listGithubContent(
   githubConfig.contentRoot

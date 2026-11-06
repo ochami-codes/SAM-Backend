@@ -5,8 +5,10 @@ import {
   createCloudinaryUploadSignature,
   getCloudinaryAsset,
   deleteCloudinaryMedia,
+  confirmCloudinaryUpload,
 } from "../services/media/cloudinaryService.ts";
 import { ManagedContentModel } from "../models/ManagedContent.ts";
+import type { AuthenticatedRequest } from "../middleware/authenticate.ts";
 
 export const getCloudinaryMedia = asyncHandler(
   async (req, res) => {
@@ -134,7 +136,7 @@ export function createCloudinaryUploadSignatureController(
 }
 
 export const deleteCloudinaryMediaController = asyncHandler(
-  async (req, res) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     const publicId: unknown = req.body?.publicId;
 
     if (
@@ -184,7 +186,14 @@ export const deleteCloudinaryMediaController = asyncHandler(
       return;
     }
 
-    const result = await deleteCloudinaryMedia(asset.publicId);
+    const ipAddress = req.ip;
+const userAgent = req.get("user-agent");
+
+const result = await deleteCloudinaryMedia(publicId, {
+  adminId: req.user!.userId,
+  ...(ipAddress !== undefined && { ipAddress }),
+  ...(userAgent !== undefined && { userAgent }),
+});
 
     if (result.result !== "ok") {
       res.status(502).json({
@@ -200,6 +209,40 @@ export const deleteCloudinaryMediaController = asyncHandler(
       data: {
         publicId: asset.publicId,
       },
+    });
+  }
+);
+export const confirmCloudinaryUploadController = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const assetId: unknown = req.body?.assetId;
+
+    if (
+      typeof assetId !== "string" ||
+      assetId.trim().length === 0 ||
+      assetId.length > 255
+    ) {
+      res.status(400).json({
+        success: false,
+        message: "A valid Cloudinary asset ID is required.",
+      });
+      return;
+    }
+    const fullName = req.user?.fullName;
+    const email = req.user?.email;
+    const ipAddress = req.ip;
+    const userAgent = req.get("user-agent");
+
+    await confirmCloudinaryUpload(assetId.trim(), {
+      adminId: req.user!.userId,
+      ...(fullName !== undefined && { fullName }),
+      ...(email !== undefined && { email }),
+      ...(ipAddress !== undefined && { ipAddress }),
+      ...(userAgent !== undefined && { userAgent }),
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Image upload confirmed successfully.",
     });
   }
 );

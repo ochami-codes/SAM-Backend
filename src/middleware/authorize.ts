@@ -25,7 +25,6 @@ export function authorize(
         )
       );
     }
-
     if (!allowedRoles.includes(req.user.role)) {
       return next(
         new AppError(

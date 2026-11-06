@@ -2,6 +2,8 @@ import { UserModel } from "../../models/User.ts";
 import { RefreshSessionModel } from "../../models/refreshSession.ts";
 import { hashPassword, verifyPassword } from "../../utils/password.ts";
 import { AppError } from "../../errors/AppError.ts";
+import { createAuditLog } from "../../services/audit/auditCreationService.ts";
+import { AUDIT_ACTIONS } from "../../constants/auditActions.ts";
 
 interface ChangePasswordInput {
   userId: string;
@@ -9,19 +11,23 @@ interface ChangePasswordInput {
   newPassword: string;
 }
 
-export async function changePassword({
-  userId,
-  currentPassword,
-  newPassword,
-}: ChangePasswordInput): Promise<void> {
+interface PasswordAuditContext {
+  ipAddress?: string;
+  userAgent?: string;
+}
+
+export async function changePassword(
+  {
+    userId,
+    currentPassword,
+    newPassword,
+  }: ChangePasswordInput,
+  auditContext: PasswordAuditContext = {}
+): Promise<void> {
   const user = await UserModel.findById(userId);
 
   if (!user) {
-    throw new AppError(
-      "User not found",
-      404,
-      "USER_NOT_FOUND"
-    );
+    throw new AppError("User not found", 404, "USER_NOT_FOUND");
   }
 
   const passwordValid = await verifyPassword(
@@ -51,6 +57,27 @@ export async function changePassword({
   user.mustChangePassword = false;
 
   await user.save();
-    // Invalidate all existing refresh tokens for the user
-    await RefreshSessionModel.deleteMany({ userId: user._id });
+
+  const revokedSessions = await RefreshSessionModel.deleteMany({
+    userId: user._id,
+  });
+
+  await createAuditLog({
+    actor: {
+      userId: user._id,
+      fullName: user.fullName,
+      email: user.email,
+    },
+    action: AUDIT_ACTIONS.PASSWORD_CHANGED,
+    category: "authentication",
+    resource: {
+      type: "user",
+      id: userId,
+    },
+    description: "User changed their password successfully",
+    metadata: {
+      revokedSessions: revokedSessions.deletedCount,
+    },
+    ...auditContext,
+  });
 }

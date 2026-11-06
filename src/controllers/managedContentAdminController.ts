@@ -51,138 +51,159 @@ export async function getManagedContentController(
 }
 
 export async function createManagedContentController(
-  req: AuthenticatedRequest,
-  res: Response
+req: AuthenticatedRequest,
+res: Response
 ): Promise<void> {
-  if (!req.user) {
-    throw new AppError(
-      "Authentication required",
-      401,
-      "AUTHENTICATION_REQUIRED"
-    );
-  }
+if (!req.user) {
+throw new AppError(
+"Authentication required",
+401,
+"AUTHENTICATION_REQUIRED"
+);
+}
 
-  const input = validateCreateManagedContentBody(
-    req.body
-  );
+const input = validateCreateManagedContentBody(req.body);
 
-  const content = await createManagedContent(
-    input,
-    req.user.userId
-  );
+const content = await createManagedContent(input, {
+userId: req.user.userId,
+...(req.ip !== undefined && { ipAddress: req.ip }),
+...(req.get("user-agent") !== undefined && {
+userAgent: req.get("user-agent")!,
+}),
+});
 
-  res.status(201).json({
-    success: true,
-    data: content,
-  });
+res.status(201).json({
+success: true,
+data: content,
+});
 }
 
 export async function updateManagedContentController(
-  req: AuthenticatedRequest,
-  res: Response
+req: AuthenticatedRequest,
+res: Response
 ): Promise<void> {
-  if (!req.user) {
-    throw new AppError(
-      "Authentication required",
-      401,
-      "AUTHENTICATION_REQUIRED"
-    );
-  }
+if (!req.user) {
+throw new AppError(
+"Authentication required",
+401,
+"AUTHENTICATION_REQUIRED"
+);
+}
 
-  const identifier = validateManagedContentIdentifier(
-    req.params.section,
-    req.params.category,
-    req.params.slug
-  );
+const identifier = validateManagedContentIdentifier(
+req.params.section,
+req.params.category,
+req.params.slug
+);
 
-  const input = validateUpdateManagedContentBody(
-    req.body
-  );
+const input = validateUpdateManagedContentBody(req.body);
 
-  const content = await updateManagedContent(
-    identifier,
-    input,
-    req.user.userId
-  );
+const content = await updateManagedContent(identifier, input, {
+userId: req.user.userId,
+...(req.ip !== undefined && { ipAddress: req.ip }),
+...(req.get("user-agent") !== undefined && {
+userAgent: req.get("user-agent")!,
+}),
+});
 
-  res.status(200).json({
-    success: true,
-    data: content,
-  });
+res.status(200).json({
+success: true,
+data: content,
+});
 }
 
 export async function deleteManagedContentController(
-  req: AuthenticatedRequest,
-  res: Response
+req: AuthenticatedRequest,
+res: Response
 ): Promise<void> {
-  const identifier = validateManagedContentIdentifier(
-    req.params.section,
-    req.params.category,
-    req.params.slug
-  );
+if (!req.user) {
+throw new AppError(
+"Authentication required",
+401,
+"AUTHENTICATION_REQUIRED"
+);
+}
 
-  await deleteManagedContent(identifier);
+const identifier = validateManagedContentIdentifier(
+req.params.section,
+req.params.category,
+req.params.slug
+);
 
-  res.status(200).json({
-    success: true,
-    message: "Managed content deleted successfully",
-  });
+await deleteManagedContent(identifier, {
+userId: req.user.userId,
+...(req.ip !== undefined && { ipAddress: req.ip }),
+...(req.get("user-agent") !== undefined && {
+userAgent: req.get("user-agent")!,
+}),
+});
+
+res.status(200).json({
+success: true,
+message: "Managed content deleted successfully",
+});
 }
 
 export async function publishManagedContentController(
-  req: AuthenticatedRequest,
-  res: Response
+req: AuthenticatedRequest,
+res: Response
 ): Promise<void> {
-  if (!req.user) {
-    throw new AppError(
-      "Authentication required",
-      401,
-      "AUTHENTICATION_REQUIRED"
-    );
-  }
+if (!req.user) {
+throw new AppError(
+"Authentication required",
+401,
+"AUTHENTICATION_REQUIRED"
+);
+}
 
-  const identifier = validateManagedContentIdentifier(
-    req.params.section,
-    req.params.category,
-    req.params.slug
-  );
+const identifier = validateManagedContentIdentifier(
+req.params.section,
+req.params.category,
+req.params.slug
+);
 
-  const content = await publishManagedContent(
-    identifier,
-    req.user.userId
-  );
+const content = await publishManagedContent(identifier, {
+userId: req.user.userId,
+...(req.ip !== undefined && { ipAddress: req.ip }),
+...(req.get("user-agent") !== undefined && {
+userAgent: req.get("user-agent")!,
+}),
+});
 
-  res.status(200).json({
-    success: true,
-    data: content,
-  });
+res.status(200).json({
+success: true,
+data: content,
+});
 }
 
 export async function unpublishManagedContentController(
-  req: AuthenticatedRequest,
-  res: Response
+req: AuthenticatedRequest,
+res: Response
 ): Promise<void> {
-  if (!req.user) {
-    throw new AppError(
-      "Authentication required",
-      401,
-      "AUTHENTICATION_REQUIRED"
-    );
-  }
+if (!req.user) {
+throw new AppError(
+"Authentication required",
+401,
+"AUTHENTICATION_REQUIRED"
+);
+}
 
-  const identifier = validateManagedContentIdentifier(
-    req.params.section,
-    req.params.category,
-    req.params.slug
-  );
+const identifier = validateManagedContentIdentifier(
+req.params.section,
+req.params.category,
+req.params.slug
+);
 
-  const content = await unpublishManagedContent(
-    identifier,
-    req.user.userId
-  );
+const content = await unpublishManagedContent(identifier, {
+userId: req.user.userId,
+...(req.ip !== undefined && { ipAddress: req.ip }),
+...(req.get("user-agent") !== undefined && {
+userAgent: req.get("user-agent")!,
+}),
+});
 
-  res.status(200).json({
-    success: true,
-    data: content,
-  });
+res.status(200).json({
+success: true,
+data: content,
+});
 }

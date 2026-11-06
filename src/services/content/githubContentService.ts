@@ -7,6 +7,7 @@ export interface GithubContent {
   content: string;
 }
 export interface GithubContentEntry { path: string; name: string; sha: string; type: "file" | "dir"; }
+
 export async function getGithubContent(
   path: string
 ): Promise<GithubContent> {
@@ -37,6 +38,7 @@ export async function getGithubContent(
     content: Buffer.from(data.content, "base64").toString("utf-8"),
   };
 }
+
 export async function listGithubContent( path: string ): Promise<GithubContentEntry[]> { const octokit = await getGithubInstallationOctokit();
      const { data } = await octokit.rest.repos.getContent({ owner: githubConfig.owner, repo: githubConfig.repo, path, ref: githubConfig.branch, }); 
      if (!Array.isArray(data)) { throw new Error(`Expected a directory but received a file: ${path}`);

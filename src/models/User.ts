@@ -7,6 +7,14 @@ import mongoose, {
 
 const userSchema = new Schema(
   {
+    fullName: {
+      type: String,
+      required: true,
+      trim: true,
+      minlength: 2,
+      maxlength: 100,
+    },
+
     email: {
       type: String,
       required: true,
@@ -39,14 +47,10 @@ const userSchema = new Schema(
   { timestamps: true }
 );
 
-export type User = InferSchemaType<
-  typeof userSchema
->;
+export type User = InferSchemaType<typeof userSchema>;
 
-export type UserDocument =
-  HydratedDocument<User>;
+export type UserDocument = HydratedDocument<User>;
 
 export const UserModel: Model<User> =
   (mongoose.models.User as Model<User>) ||
   mongoose.model<User>("User", userSchema);
-

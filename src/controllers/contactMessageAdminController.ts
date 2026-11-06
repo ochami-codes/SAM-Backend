@@ -55,10 +55,10 @@ export async function markMessageAsRead(
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> {
-    const id = validateObjectId(
-  req.params.id,
-  "Contact message ID"
-);
+  const id = validateObjectId(
+    req.params.id,
+    "Contact message ID"
+  );
 
   if (!id) {
     throw new AppError(
@@ -76,15 +76,25 @@ export async function markMessageAsRead(
     );
   }
 
+  const ipAddress = req.ip;
+  const userAgent = req.get("user-agent");
+
   await markContactMessageAsRead(
     id,
-    req.user.userId
+    req.user.userId,
+    {
+      actor: {
+        fullName: req.user.fullName,
+        email: req.user.email,
+      },
+      ...(ipAddress !== undefined && { ipAddress }),
+      ...(userAgent !== undefined && { userAgent }),
+    }
   );
 
   res.status(200).json({
     success: true,
-    message:
-      "Contact message marked as read.",
+    message: "Contact message marked as read.",
   });
 }
 
@@ -93,9 +103,9 @@ export async function archiveMessage(
   res: Response
 ): Promise<void> {
   const id = validateObjectId(
-  req.params.id,
-  "Contact message ID"
-);
+    req.params.id,
+    "Contact message ID"
+  );
 
   if (!id) {
     throw new AppError(
@@ -105,11 +115,32 @@ export async function archiveMessage(
     );
   }
 
-  await archiveContactMessage(id);
+  if (!req.user) {
+    throw new AppError(
+      "Authentication required",
+      401,
+      "AUTHENTICATION_REQUIRED"
+    );
+  }
+
+  const ipAddress = req.ip;
+  const userAgent = req.get("user-agent");
+
+  await archiveContactMessage(
+    id,
+    req.user.userId,
+    {
+      actor: {
+        fullName: req.user.fullName,
+        email: req.user.email,
+      },
+      ...(ipAddress !== undefined && { ipAddress }),
+      ...(userAgent !== undefined && { userAgent }),
+    }
+  );
 
   res.status(200).json({
     success: true,
-    message:
-      "Contact message archived successfully.",
+    message: "Contact message archived successfully.",
   });
 }

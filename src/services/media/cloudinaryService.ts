@@ -1,4 +1,8 @@
+import mongoose from "mongoose";
 import cloudinary from "../../config/cloudinary.ts";
+import { AUDIT_ACTIONS } from "../../constants/auditActions.ts";
+import { createAuditLog } from "../audit/auditCreationService.ts";
+import { AuditLogModel } from "../../models/AuditLog.ts";
 
 export interface CloudinaryUploadSignature {
   timestamp: number;
@@ -24,6 +28,21 @@ export interface CloudinaryMediaItem {
 export interface CloudinaryMediaPage {
   items: CloudinaryMediaItem[];
   nextCursor: string | null;
+}
+
+interface MediaAuditContext {
+   fullName?: string | undefined;
+   email?: string | undefined;
+   adminId: string;
+   ipAddress?: string; 
+   userAgent?: string; 
+  }
+  export interface MediaUploadAuditContext {
+  fullName?: string;
+  email?: string;  
+  adminId: string;
+  ipAddress?: string | undefined;
+  userAgent?: string | undefined;
 }
 
 export function createCloudinaryUploadSignature(): CloudinaryUploadSignature {
@@ -132,7 +151,8 @@ export async function getCloudinaryAsset(
 }
 
 export async function deleteCloudinaryMedia(
-  publicId: string
+  publicId: string,
+  auditContext: MediaAuditContext
 ): Promise<{ result: string }> {
   const asset = await getCloudinaryAsset(publicId);
 
@@ -145,7 +165,102 @@ export async function deleteCloudinaryMedia(
     invalidate: true,
   });
 
-  return {
-    result: result.result,
-  };
+  if (result.result !== "ok") {
+    return { result: result.result };
+  }
+
+  await createAuditLog({
+    actor: {
+      userId: new mongoose.Types.ObjectId(auditContext.adminId),
+      ...(auditContext.fullName !== undefined && {
+        fullName: auditContext.fullName,
+      }),
+      ...(auditContext.email !== undefined && {
+        email: auditContext.email,
+      }),
+    },
+    action: AUDIT_ACTIONS.MEDIA_DELETED,
+    category: "media",
+    resource: {
+      type: "cloudinary_asset",
+      id: asset.publicId,
+    },
+    description: "Media asset deleted successfully",
+    metadata: {
+      publicId: asset.publicId,
+      secureUrl: asset.secureUrl,
+      resourceType: "image",
+    },
+    ...(auditContext.ipAddress !== undefined && {
+      ipAddress: auditContext.ipAddress,
+    }),
+    ...(auditContext.userAgent !== undefined && {
+      userAgent: auditContext.userAgent,
+    }),
+  });
+
+  return { result: result.result };
 }
+
+export async function confirmCloudinaryUpload(
+  assetId: string,
+  auditContext: MediaUploadAuditContext
+): Promise<void> {
+  // Find the uploaded asset using its Cloudinary asset ID.
+  const result = await cloudinary.search
+    .expression(
+      `asset_id=${assetId} AND resource_type:image AND folder:"sam"`
+    )
+    .max_results(1)
+    .execute();
+
+  const asset = result.resources?.[0];
+
+  if (!asset) {
+    throw new Error(
+      "Uploaded image could not be verified in the SAM media folder."
+    );
+  }
+
+  // Prevent ordinary retries from creating duplicate audit events.
+  const existingAudit = await AuditLogModel.exists({
+    action: AUDIT_ACTIONS.MEDIA_UPLOADED,
+    "resource.id": asset.asset_id,
+  });
+
+  if (existingAudit) {
+    return;
+  }
+
+  await createAuditLog({
+    actor: {
+      userId: new mongoose.Types.ObjectId(auditContext.adminId),
+      ...(auditContext.fullName !== undefined && {
+        fullName: auditContext.fullName,
+      }),
+      ...(auditContext.email !== undefined && {
+        email: auditContext.email,
+      })},
+    action: AUDIT_ACTIONS.MEDIA_UPLOADED,
+    category: "media",
+    resource: {
+      type: "cloudinary_asset",
+      id: asset.asset_id,
+    },
+    description: "Media asset uploaded successfully",
+    metadata: {
+      assetId: asset.asset_id,
+      publicId: asset.public_id,
+      secureUrl: asset.secure_url,
+      format: asset.format,
+      bytes: asset.bytes,
+      resourceType: asset.resource_type,
+    },
+    ...(auditContext.ipAddress !== undefined && {
+      ipAddress: auditContext.ipAddress,
+    }),
+    ...(auditContext.userAgent !== undefined && {
+      userAgent: auditContext.userAgent,
+    }),
+  });
+}                    

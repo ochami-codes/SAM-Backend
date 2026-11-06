@@ -1,7 +1,10 @@
 import { Router } from "express";
 
 import {
-  createCloudinaryUploadSignatureController, getCloudinaryMedia, deleteCloudinaryMediaController
+  createCloudinaryUploadSignatureController,
+  confirmCloudinaryUploadController,
+  getCloudinaryMedia,
+  deleteCloudinaryMediaController,
 } from "../controllers/cloudinaryController.ts";
 
 import { authenticate } from "../middleware/authenticate.ts";
@@ -17,12 +20,20 @@ router.post(
   asyncHandler(createCloudinaryUploadSignatureController)
 );
 
+router.post(
+  "/confirm-upload",
+  authenticate,
+  authorize("admin", "super_admin"),
+  asyncHandler(confirmCloudinaryUploadController)
+);
+
 router.get(
   "/",
   authenticate,
   authorize("admin", "super_admin"),
   asyncHandler(getCloudinaryMedia)
 );
+
 router.delete(
   "/",
   authenticate,

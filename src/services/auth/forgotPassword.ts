@@ -2,72 +2,84 @@ import crypto from "node:crypto";
 
 import { UserModel } from "../../models/User.ts";
 import { PasswordResetTokenModel } from "../../models/PasswordResetToken.ts";
+import { RefreshSessionModel } from "../../models/refreshSession.ts";
+import { hashPassword } from "../../utils/password.ts";
+import { AppError } from "../../errors/AppError.ts";
+import { createAuditLog } from "../../services/audit/auditCreationService.ts";
+import { AUDIT_ACTIONS } from "../../constants/auditActions.ts";
 
-import { sendEmail } from "../../utils/email/sendEmail.ts";
-import { passwordResetEmail } from "../../utils/email/templates/passwordResetEmail.ts";
+interface ChangeForgottenPasswordInput {
+  token: string;
+  newPassword: string;
+}
 
-export async function requestPasswordReset(
-  email: string
+interface PasswordAuditContext {
+  ipAddress?: string | undefined;
+  userAgent?: string | undefined;
+}
+
+export async function changeForgottenPassword(
+  { token, newPassword }: ChangeForgottenPasswordInput,
+  auditContext: PasswordAuditContext = {}
 ): Promise<void> {
-  const normalizedEmail = email.trim().toLowerCase();
+  const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
 
-  const user = await UserModel.findOne({
-    email: normalizedEmail,
-  });
-
-  // Do not reveal whether the account exists.
-  if (!user) {
-    return;
-  }
-
-  // Remove any existing reset tokens for this user.
-  await PasswordResetTokenModel.deleteMany({
-    userId: user._id,
-  });
-
-  // Generate a cryptographically secure reset token.
-  const rawToken = crypto.randomBytes(32).toString("hex");
-
-  // Store only the hash in MongoDB.
-  const tokenHash = crypto
-    .createHash("sha256")
-    .update(rawToken)
-    .digest("hex");
-
-  const expiresInMinutes = 15;
-
-  const expiresAt = new Date(
-    Date.now() + expiresInMinutes * 60 * 1000
-  );
-
-  await PasswordResetTokenModel.create({
-    userId: user._id,
+  // 1. Find token in new collection, not on User
+  const resetRecord = await PasswordResetTokenModel.findOne({
     tokenHash,
-    expiresAt,
+    expiresAt: { $gt: new Date() },
   });
 
-  // Build the URL the user will open from the email.
-  const frontendUrl = process.env.FRONTEND_URL;
-
-  if (!frontendUrl) {
-    throw new Error("FRONTEND_URL is not defined");
+  if (!resetRecord) {
+    throw new AppError(
+      "Invalid or expired password reset token",
+      400,
+      "INVALID_RESET_TOKEN"
+    );
   }
 
-  const resetUrl =
-    `${frontendUrl}/admin/auth/reset-password` +
-    `?token=${encodeURIComponent(rawToken)}`;
+  const user = await UserModel.findById(resetRecord.userId);
 
-  // Generate the email.
-  const emailContent = passwordResetEmail({
-    resetUrl,
-    expiresInMinutes,
+  if (!user) {
+    // cleanup orphaned token
+    await PasswordResetTokenModel.deleteOne({ _id: resetRecord._id });
+    throw new AppError("User not found", 404, "USER_NOT_FOUND");
+  }
+
+  // 2. Hash new password
+  const passwordHash = await hashPassword(newPassword);
+
+  user.passwordHash = passwordHash;
+  user.mustChangePassword = false;
+  await user.save();
+
+  // 3. Invalidate this reset token so it can't be reused
+  await PasswordResetTokenModel.deleteOne({ _id: resetRecord._id });
+
+  // 4. Optional: delete ALL reset tokens for user + revoke refresh sessions
+  await PasswordResetTokenModel.deleteMany({ userId: user._id });
+  
+  const revokedSessions = await RefreshSessionModel.deleteMany({
+    userId: user._id,
   });
 
-  // Send the email.
-  await sendEmail({
-    to: user.email,
-    subject: emailContent.subject,
-    html: emailContent.html,
-    text: emailContent.text,
+  await createAuditLog({
+    actor: {
+      userId: user._id,
+      fullName: user.fullName,
+      email: user.email,
+    },
+    action: AUDIT_ACTIONS.PASSWORD_RESET,
+    category: "authentication",
+    resource: {
+      type: "user",
+      id: user._id.toString(),
+    },
+    description: "User successfully reset their password",
+    metadata: {
+      revokedSessions: revokedSessions.deletedCount,
+    },
+    ipAddress: auditContext.ipAddress,
+    userAgent: auditContext.userAgent,
   });
 }

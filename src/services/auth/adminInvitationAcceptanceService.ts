@@ -1,20 +1,30 @@
 import crypto from "node:crypto";
-
+import { Types } from "mongoose";
 import { UserModel } from "../../models/User.ts";
 import { AdminInvitationModel } from "../../models/AdminInvitation.ts";
 import { withTransaction } from "../../utils/database/transaction.ts";
 import { hashPassword } from "../../utils/password.ts";
 import { AppError } from "../../errors/AppError.ts";
+import { createAuditLog } from "../../services/audit/auditCreationService.ts";
+import { AUDIT_ACTIONS } from "../../constants/auditActions.ts";
 
 interface AcceptInvitationInput {
   password: string;
   token: string;
 }
 
-export async function acceptAdminInvitation({
-  password,
-  token
-}: AcceptInvitationInput): Promise<void> {
+interface InvitationAuditContext {
+  ipAddress?: string;
+  userAgent?: string;
+}
+
+export async function acceptAdminInvitation(
+  {
+    password,
+    token,
+  }: AcceptInvitationInput,
+  auditContext: InvitationAuditContext = {}
+): Promise<void> {
   if (!token || !password) {
     throw new AppError(
       "Invitation token and password are required",
@@ -23,19 +33,11 @@ export async function acceptAdminInvitation({
     );
   }
 
-  /*
-   * Hash the raw token received from the browser.
-   *
-   * MongoDB stores only this hash, never the raw token.
-   */
   const tokenHash = crypto
     .createHash("sha256")
     .update(token)
     .digest("hex");
 
-  /*
-   * Find the invitation.
-   */
   const invitation = await AdminInvitationModel.findOne({
     tokenHash,
   });
@@ -48,12 +50,6 @@ export async function acceptAdminInvitation({
     );
   }
 
-  /*
-   * Explicit expiration check.
-   *
-   * The MongoDB TTL index is only for cleanup and should
-   * not be relied upon for authorization.
-   */
   if (invitation.expiresAt <= new Date()) {
     await AdminInvitationModel.deleteOne({
       _id: invitation._id,
@@ -66,10 +62,6 @@ export async function acceptAdminInvitation({
     );
   }
 
-  /*
-   * Make sure an account has not already been created
-   * for this email.
-   */
   const existingUser = await UserModel.findOne({
     email: invitation.email,
   });
@@ -86,37 +78,75 @@ export async function acceptAdminInvitation({
     );
   }
 
-  /*
-   * Hash the administrator's new password.
-   */
   const passwordHash = await hashPassword(password);
 
-/*
- * Create the administrator account and consume
- * the invitation atomically.
- */
-await withTransaction(async (session) => {
-  await UserModel.create(
-    [
-      {
-        email: invitation.email,
-        passwordHash,
-        role: "admin",
-        isActive: true,
-        mustChangePassword: false,
-      },
-    ],
-    { session }
-  );
+  let createdUserId: Types.ObjectId | undefined;
 
-  /*
-   * Invitations are single-use.
-   */
-  await AdminInvitationModel.deleteOne(
-    {
-      _id: invitation._id,
-    },
-    { session }
+  await withTransaction(async (session) => {
+    const [createdUser] = await UserModel.create(
+      [
+        {
+          fullName: invitation.fullName,
+          email: invitation.email,
+          passwordHash,
+          role: "admin",
+          isActive: true,
+          mustChangePassword: false,
+        },
+      ],
+      { session }
+    );
+if (!createdUser) {
+  throw new AppError(
+    "Administrator account creation failed",
+    500,
+    "ACCOUNT_CREATION_FAILED"
   );
-});
+}
+    createdUserId = createdUser._id;
+
+    const consumedInvitation = await AdminInvitationModel.deleteOne(
+      {
+        _id: invitation._id,
+      },
+      { session }
+    );
+
+    if (consumedInvitation.deletedCount !== 1) {
+      throw new AppError(
+        "Invitation could not be consumed",
+        409,
+        "INVITATION_ALREADY_USED"
+      );
+    }
+  });
+
+  if (!createdUserId) {
+    throw new AppError(
+      "Administrator account creation failed",
+      500,
+      "ACCOUNT_CREATION_FAILED"
+    );
+  }
+
+  await createAuditLog({
+    actor: {
+      userId: createdUserId,
+      fullName: invitation.fullName,
+      email: invitation.email,
+    },
+    action: AUDIT_ACTIONS.ADMIN_INVITATION_ACCEPTED,
+    category: "authentication",
+    resource: {
+      type: "admin_invitation",
+      id: invitation._id.toString(),
+    },
+    description: "Administrator successfully accepted an invitation",
+    metadata: {
+      role: "admin",
+      invitationId: invitation._id.toString(),
+      invitedBy: invitation.invitedBy.toString(),
+    },
+    ...auditContext,
+  });
 }

@@ -2,90 +2,104 @@ import type { Response } from "express";
 import type { AuthenticatedRequest } from "../middleware/authenticate.ts";
 
 import {
-  deleteContent,
-  getContent,
-  listContent,
-  updateContent,
+deleteContent,
+getContent,
+listContent,
+updateContent,
 } from "../services/content/contentAdminService.ts";
 
 import {
-  validateContentIdentifier,
-  validateDeleteContentBody,
-  validateUpdateContentBody,
+validateContentIdentifier,
+validateDeleteContentBody,
+validateUpdateContentBody,
 } from "../utils/validation/contentValidation.ts";
 
 export async function listContentController(
-  _req: AuthenticatedRequest,
-  res: Response
+_req: AuthenticatedRequest,
+res: Response
 ): Promise<void> {
-  const content = await listContent();
+const content = await listContent();
 
-  res.status(200).json({
-    success: true,
-    data: content,
-  });
+res.status(200).json({
+success: true,
+data: content,
+});
 }
 
 export async function getContentController(
-  req: AuthenticatedRequest,
-  res: Response
+req: AuthenticatedRequest,
+res: Response
 ): Promise<void> {
-  const identifier = validateContentIdentifier(
-    req.params.section,
-    req.params.category,
-    req.params.slug
-  );
+const identifier = validateContentIdentifier(
+req.params.section,
+req.params.category,
+req.params.slug
+);
 
-  const content = await getContent(identifier);
+const content = await getContent(identifier);
 
-  res.status(200).json({
-    success: true,
-    data: content,
-  });
+res.status(200).json({
+success: true,
+data: content,
+});
 }
 
 export async function updateContentController(
-  req: AuthenticatedRequest,
-  res: Response
+req: AuthenticatedRequest,
+res: Response
 ): Promise<void> {
-  const identifier = validateContentIdentifier(
-    req.params.section,
-    req.params.category,
-    req.params.slug
-  );
+const identifier = validateContentIdentifier(
+req.params.section,
+req.params.category,
+req.params.slug
+);
 
-  const input = validateUpdateContentBody(req.body);
+const input = validateUpdateContentBody(req.body);
+const fullName = req.user?.fullName;
+const email = req.user?.email;
+const ipAddress = req.ip;
+const userAgent = req.get("user-agent");
 
-  const updatedContent = await updateContent(
-    identifier,
-    input
-  );
+const updatedContent = await updateContent(identifier, input, {
+adminId: req.user!.userId,
+...(ipAddress !== undefined && { ipAddress }),
+...(userAgent !== undefined && { userAgent }),
+...(fullName !== undefined && { fullName }),
+...(email !== undefined && { email }),
+});
 
-  res.status(200).json({
-    success: true,
-    data: updatedContent,
-  });
+res.status(200).json({
+success: true,
+data: updatedContent,
+});
 }
 
 export async function deleteContentController(
-  req: AuthenticatedRequest,
-  res: Response
+req: AuthenticatedRequest,
+res: Response
 ): Promise<void> {
-  const identifier = validateContentIdentifier(
-    req.params.section,
-    req.params.category,
-    req.params.slug
-  );
+const identifier = validateContentIdentifier(
+req.params.section,
+req.params.category,
+req.params.slug
+);
 
-  const input = validateDeleteContentBody(req.body);
+const input = validateDeleteContentBody(req.body);
+const fullName = req.user?.fullName;
+const email = req.user?.email;
+const ipAddress = req.ip;
+const userAgent = req.get("user-agent");
 
-  const deletedContent = await deleteContent(
-    identifier,
-    input
-  );
+const deletedContent = await deleteContent(identifier, input, {
+adminId: req.user!.userId,
+...(ipAddress !== undefined && { ipAddress }),
+...(userAgent !== undefined && { userAgent }),
+...(fullName !== undefined && { fullName }),
+...(email !== undefined && { email }),
+});
 
-  res.status(200).json({
-    success: true,
-    data: deletedContent,
-  });
+res.status(200).json({
+success: true,
+data: deletedContent,
+});
 }

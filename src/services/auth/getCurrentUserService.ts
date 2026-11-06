@@ -4,6 +4,7 @@ import { AppError } from "../../errors/AppError.ts";
 interface CurrentUser {
   id: string;
   email: string;
+  fullName: string;
   role: "super_admin" | "admin";
   mustChangePassword: boolean;
 }
@@ -32,6 +33,7 @@ export async function getCurrentUser(
   return {
     id: user._id.toString(),
     email: user.email,
+    fullName: user.fullName,
     role: user.role,
     mustChangePassword: user.mustChangePassword,
   };

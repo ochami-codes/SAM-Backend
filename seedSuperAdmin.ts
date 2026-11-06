@@ -15,7 +15,7 @@ async function seedSuperAdmin(): Promise<void> {
 
     const email = process.env.SUPER_ADMIN_EMAIL;
     const password = process.env.SUPER_ADMIN_PASSWORD;
-
+    const fullName = process.env.SUPER_ADMIN_FULL_NAME || "Super Admin";
     if (!email || !password) {
       throw new Error(
         "SUPER_ADMIN_EMAIL and SUPER_ADMIN_PASSWORD must be defined in .env"
@@ -44,6 +44,7 @@ async function seedSuperAdmin(): Promise<void> {
       role: "super_admin",
       isActive: true,
       mustChangePassword: true,
+      fullName: fullName,
     });
   } catch (error) {
     console.error("Failed to seed super admin:", error);

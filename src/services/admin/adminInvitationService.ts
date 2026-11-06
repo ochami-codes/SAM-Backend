@@ -1,16 +1,13 @@
-import crypto from "node:crypto";
-
 import { UserModel } from "../../models/User.ts";
-import { AdminInvitationModel } from "../../models/AdminInvitation.ts";
-
-import { sendEmail } from "../../utils/email/sendEmail.ts";
-import { adminInvitationEmail } from "../../utils/email/templates/adminInvitationEmail.ts";
+import { sendAdminInvitation } from "../../utils/sendAdminInvitation.ts";
 import { AppError } from "../../errors/AppError.ts";
-
+import { Types } from "mongoose";
 import {
   validateEmail,
   validateString,
 } from "../../utils/validation/index.ts";
+import { createAuditLog } from "../../services/audit/auditCreationService.ts";
+import { AUDIT_ACTIONS } from "../../constants/auditActions.ts";
 
 interface InviteAdminInput {
   fullName: string;
@@ -18,11 +15,19 @@ interface InviteAdminInput {
   invitedBy: string;
 }
 
-export async function inviteAdmin({
-  fullName,
-  email,
-  invitedBy,
-}: InviteAdminInput): Promise<void> {
+interface InvitationAuditContext {
+  ipAddress?: string;
+  userAgent?: string;
+}
+
+export async function inviteAdmin(
+  {
+    fullName,
+    email,
+    invitedBy,
+  }: InviteAdminInput,
+  auditContext: InvitationAuditContext = {}
+): Promise<void> {
   const validatedName = validateString(
     fullName,
     "Full name",
@@ -34,9 +39,6 @@ export async function inviteAdmin({
 
   const normalizedEmail = validateEmail(email);
 
-  /*
-   * Check whether an account already exists.
-   */
   const existingUser = await UserModel.findOne({
     email: normalizedEmail,
   });
@@ -49,74 +51,26 @@ export async function inviteAdmin({
     );
   }
 
-  /*
-   * Remove any previous invitation for this email.
-   */
-  await AdminInvitationModel.deleteMany({
-    email: normalizedEmail,
-  });
-
-  /*
-   * Generate a cryptographically secure invitation token.
-   */
-  const rawToken = crypto
-    .randomBytes(32)
-    .toString("hex");
-
-  /*
-   * Store only the hash in MongoDB.
-   */
-  const tokenHash = crypto
-    .createHash("sha256")
-    .update(rawToken)
-    .digest("hex");
-
-  /*
-   * Invitations are valid for 24 hours.
-   */
-  const expiresInHours = 24;
-
-  const expiresAt = new Date(
-    Date.now() +
-      expiresInHours * 60 * 60 * 1000
-  );
-
-  await AdminInvitationModel.create({
+  await sendAdminInvitation({
     fullName: validatedName,
     email: normalizedEmail,
-    tokenHash,
     invitedBy,
-    expiresAt,
   });
 
-  const frontendUrl = process.env.FRONTEND_URL;
-
-  if (!frontendUrl) {
-    throw new AppError(
-      "FRONTEND_URL is not configured",
-      500,
-      "INTERNAL_SERVER_ERROR"
-    );
-  }
-
-  /*
-   * The raw token is only placed in the email link.
-   * It is never stored in MongoDB.
-   */
-  const invitationUrl =
-    `${frontendUrl}/admin/auth/accept-invitation` +
-    `?token=${encodeURIComponent(rawToken)}`;
-
-  const emailContent = adminInvitationEmail({
-    fullName: validatedName,
-    invitationUrl,
-    expiresInHours,
-  });
-
-  await sendEmail({
-    to: normalizedEmail,
-    subject: emailContent.subject,
-    html: emailContent.html,
-    text: emailContent.text,
+  await createAuditLog({
+    actor: {
+      userId: new Types.ObjectId(invitedBy),
+    },
+    action: AUDIT_ACTIONS.ADMIN_INVITED,
+    category: "administrators",
+    resource: {
+      type: "admin_invitation",
+    },
+    description: "Administrator invitation sent successfully",
+    metadata: {
+      invitedFullName: validatedName,
+      invitedEmail: normalizedEmail,
+    },
+    ...auditContext,
   });
 }
