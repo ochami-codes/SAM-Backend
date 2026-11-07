@@ -68,12 +68,17 @@ if (process.env.NODE_ENV !== "production") {
 
 /* API Routes */
 app.use("/api/auth", authRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/contact", contactRoutes);
+
+// Specific admin routes first
 app.use("/api/admin/contact-messages", contactMessageAdminRoutes);
-app.use("/api/content", managedContentPublicRoutes);
 app.use("/api/admin/content", contentAdminRoutes);
 app.use("/api/admin/managed-content", managedContentRoutes);
+
+// General admin routes last
+app.use("/api/admin", adminRoutes);
+
+app.use("/api/contact", contactRoutes);
+app.use("/api/content", managedContentPublicRoutes);
 app.use("/api/media", cloudinaryRoutes);
 app.use("/api/audit", auditRoutes);
 
@@ -89,4 +94,3 @@ app.get("/api/health", (_req: Request, res: Response) => {
 app.use(errorHandler);
 
 export default app;
-
