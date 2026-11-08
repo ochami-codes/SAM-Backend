@@ -20,6 +20,9 @@ import auditRoutes from "./routes/auditRoutes.ts";
 
 const app: Application = express();
 
+/* Proxy Configuration */
+app.set("trust proxy", 1);
+
 /* Security */
 app.use(helmet());
 
