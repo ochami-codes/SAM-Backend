@@ -1,5 +1,6 @@
 import type { Response } from "express";
 import  { validateObjectId } from "../utils/validation/index.ts";
+import { getClientIp } from "../utils/getClientIp.ts";
 import type {
   AuthenticatedRequest,
 } from "../middleware/authenticate.ts";
@@ -76,7 +77,7 @@ export async function markMessageAsRead(
     );
   }
 
-  const ipAddress = req.ip;
+  const ipAddress = getClientIp(req);
   const userAgent = req.get("user-agent");
 
   await markContactMessageAsRead(
@@ -123,7 +124,7 @@ export async function archiveMessage(
     );
   }
 
-  const ipAddress = req.ip;
+  const ipAddress = getClientIp(req);
   const userAgent = req.get("user-agent");
 
   await archiveContactMessage(
