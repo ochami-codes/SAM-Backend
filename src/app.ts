@@ -85,6 +85,15 @@ app.use("/api/content", managedContentPublicRoutes);
 app.use("/api/media", cloudinaryRoutes);
 app.use("/api/audit", auditRoutes);
 
+app.get("/api/debug/request-ip", (req, res) => {
+  res.json({
+    ip: req.ip,
+    ips: req.ips,
+    remoteAddress: req.socket.remoteAddress,
+    forwardedFor: req.headers["x-forwarded-for"],
+    cloudflareIp: req.headers["cf-connecting-ip"],
+  });
+});
 /* Health Check */
 app.get("/api/health", (_req: Request, res: Response) => {
   res.status(200).json({
