@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { asyncHandler } from "../middleware/asyncHandler.ts";
+import { getClientIp } from "../utils/getClientIp.ts";
 import {
   listCloudinaryMedia,
   createCloudinaryUploadSignature,
@@ -186,7 +187,7 @@ export const deleteCloudinaryMediaController = asyncHandler(
       return;
     }
 
-    const ipAddress = req.ip;
+    const ipAddress = getClientIp(req);
 const userAgent = req.get("user-agent");
 
 const result = await deleteCloudinaryMedia(publicId, {
@@ -229,7 +230,7 @@ export const confirmCloudinaryUploadController = asyncHandler(
     }
     const fullName = req.user?.fullName;
     const email = req.user?.email;
-    const ipAddress = req.ip;
+    const ipAddress = getClientIp(req);
     const userAgent = req.get("user-agent");
 
     await confirmCloudinaryUpload(assetId.trim(), {
