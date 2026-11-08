@@ -1,5 +1,6 @@
 import type { Response } from "express";
 import { loginUser } from "../../services/auth/authService.ts";
+import { getClientIp } from "../../utils/getClientIp.ts";
 import type { AuthenticatedRequest } from "../../middleware/authenticate.ts";
 import { AppError } from "../../errors/AppError.ts";
 
@@ -24,7 +25,7 @@ email,
 password,
 },
 {
-ipAddress: req.ip,
+ipAddress: getClientIp(req),
 userAgent: req.get("user-agent") ?? undefined,
 }
 );
