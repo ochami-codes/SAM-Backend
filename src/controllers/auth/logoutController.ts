@@ -1,5 +1,6 @@
 import type { AuthenticatedRequest } from "../../middleware/authenticate.ts";
 import { logoutUser } from "../../services/auth/logoutService.ts";
+import { getClientIp } from "../../utils/getClientIp.ts";
 import type { Response } from "express";
 
 export async function logout(
@@ -9,7 +10,7 @@ export async function logout(
   const refreshToken = req.cookies.refreshToken;
 
   if (refreshToken) {
-    const ipAddress = req.ip;
+    const ipAddress = getClientIp(req);
 const userAgent = req.get("user-agent");
 
 await logoutUser(
