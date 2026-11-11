@@ -24,6 +24,9 @@ import profileRoutes from "./routes/profileRoutes.ts";
 
 const app: Application = express();
 
+/* Proxy Configuration */
+app.set("trust proxy", 1);
+
 /* Security */
 app.use(helmet());
 
@@ -89,6 +92,7 @@ app.use("/api/content", managedContentPublicRoutes);
 app.use("/api/media", cloudinaryRoutes);
 app.use("/api/audit", auditRoutes);
 app.use("/api/profile", profileRoutes);
+
 
 /* Health Check */
 app.get("/api/health", (_req: Request, res: Response) => {

@@ -1,6 +1,6 @@
 import type { Response } from "express";
 import mongoose from "mongoose";
-
+import { getClientIp } from "../utils/getClientIp.ts";
 import type { AuthenticatedRequest } from "../middleware/authenticate.ts";
 
 import { AppError } from "../errors/AppError.ts";
@@ -18,7 +18,7 @@ export async function inviteAdministrator(
 ): Promise<void> {
   const { fullName, email } = req.body;
 
-  const ipAddress = req.ip;
+  const ipAddress = getClientIp(req);
   const userAgent = req.get("user-agent");
 
   await inviteAdmin(
@@ -80,7 +80,7 @@ export async function resendAdministratorInvitationController(
     );
   }
 
-  const ipAddress = req.ip;
+  const ipAddress = getClientIp(req);
   const userAgent = req.get("user-agent");
 
   await resendAdminInvitation(
@@ -117,7 +117,7 @@ export async function cancelAdministratorInvitationController(
     );
   }
 
-  const ipAddress = req.ip;
+  const ipAddress = getClientIp(req);
   const userAgent = req.get("user-agent");
 
   await cancelAdminInvitation(
@@ -163,7 +163,7 @@ export async function updateAdministratorStatusController(
     );
   }
 
-const ipAddress = req.ip;
+const ipAddress = getClientIp(req);
 const userAgent = req.get("user-agent");
 
 await updateAdministratorStatus(

@@ -1,5 +1,6 @@
 import type { Response } from "express";
 import type { AuthenticatedRequest } from "../../middleware/authenticate.ts";
+import { getClientIp } from "../../utils/getClientIp.ts";
 
 import {
 deleteContent,
@@ -57,7 +58,7 @@ req.params.slug
 const input = validateUpdateContentBody(req.body);
 const fullName = req.user?.fullName;
 const email = req.user?.email;
-const ipAddress = req.ip;
+const ipAddress = getClientIp(req);
 const userAgent = req.get("user-agent");
 
 const updatedContent = await updateContent(identifier, input, {
@@ -87,7 +88,7 @@ req.params.slug
 const input = validateDeleteContentBody(req.body);
 const fullName = req.user?.fullName;
 const email = req.user?.email;
-const ipAddress = req.ip;
+const ipAddress = getClientIp(req);
 const userAgent = req.get("user-agent");
 
 const deletedContent = await deleteContent(identifier, input, {
