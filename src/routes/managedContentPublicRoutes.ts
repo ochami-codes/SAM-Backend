@@ -2,14 +2,14 @@ import { Router } from "express";
 
 import {
   listPublishedManagedContentController,
-} from "../controllers/managedContentPublicController.ts";
+} from "../controllers/content/managedContentPublicController.ts";
 
 import {
   getPublishedArticleController,
   getPublishedManagedContentController,
-} from "../controllers/getPublishedManagedContentController.ts";
+} from "../controllers/content/getPublishedManagedContentController.ts";
 
-import { getManagedContentMetadataController } from "../controllers/managedContentMetadataController.ts";
+import { getManagedContentMetadataController } from "../controllers/content/managedContentMetadataController.ts";
 import { asyncHandler } from "../middleware/asyncHandler.ts";
 
 const router = Router();

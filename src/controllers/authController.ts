@@ -6,3 +6,6 @@ export { forgotPassword } from "../controllers/auth/forgotPasswordController.ts"
 export { resetUserPassword } from "../controllers/auth/resetUserPasswordController.ts";
 export { me } from "../controllers/auth/meController.ts";
 export { acceptAdminInvitations } from "../controllers/auth/acceptAdminInvitationsController.ts";
+export { getActiveSessionsController } from "../controllers/auth/activeSessionsController.ts";
+export { revokeSessionController } from "../controllers/auth/revokeSessionsController.ts";
+export { revokeOtherSessionsController } from "../controllers/auth/revokeSessionsController.ts";

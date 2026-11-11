@@ -3,15 +3,29 @@ import jwt, {
   type SignOptions,
 } from "jsonwebtoken";
 
+export type AccessTokenPurpose =
+  | "access"
+  | "two_factor_enrollment";
+
 export interface AccessTokenPayload extends JwtPayload {
   userId: string;
+  sessionId: string;
   role: "super_admin" | "admin";
+  authVersion: number;
+  tokenPurpose: AccessTokenPurpose;
 }
 
 export interface RefreshTokenPayload extends JwtPayload {
   userId: string;
   sessionId: string;
 }
+
+type CreateAccessTokenPayload = Omit<
+  AccessTokenPayload,
+  "tokenPurpose"
+> & {
+  tokenPurpose?: AccessTokenPurpose;
+};
 
 function getAccessSecret(): string {
   const secret = process.env.JWT_ACCESS_SECRET;
@@ -38,9 +52,15 @@ function isAccessTokenPayload(
 ): payload is AccessTokenPayload {
   return (
     typeof payload !== "string" &&
+    typeof payload.sessionId === "string" &&
     typeof payload.userId === "string" &&
     (payload.role === "admin" ||
-      payload.role === "super_admin")
+      payload.role === "super_admin") &&
+    typeof payload.authVersion === "number" &&
+    Number.isInteger(payload.authVersion) &&
+    payload.authVersion >= 0 &&
+    (payload.tokenPurpose === "access" ||
+      payload.tokenPurpose === "two_factor_enrollment")
   );
 }
 
@@ -55,13 +75,20 @@ function isRefreshTokenPayload(
 }
 
 export function createAccessToken(
-  payload: AccessTokenPayload
+  payload: CreateAccessTokenPayload
 ): string {
   const options: SignOptions = {
     expiresIn: "15m",
   };
 
-  return jwt.sign(payload, getAccessSecret(), options);
+  return jwt.sign(
+    {
+      ...payload,
+      tokenPurpose: payload.tokenPurpose ?? "access",
+    },
+    getAccessSecret(),
+    options
+  );
 }
 
 export function createRefreshToken(

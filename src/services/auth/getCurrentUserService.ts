@@ -5,6 +5,7 @@ interface CurrentUser {
   id: string;
   email: string;
   fullName: string;
+  profileImage: string | null;
   role: "super_admin" | "admin";
   mustChangePassword: boolean;
 }
@@ -34,6 +35,7 @@ export async function getCurrentUser(
     id: user._id.toString(),
     email: user.email,
     fullName: user.fullName,
+    profileImage: user.profileImage ?? null,
     role: user.role,
     mustChangePassword: user.mustChangePassword,
   };

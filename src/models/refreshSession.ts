@@ -10,18 +10,43 @@ const refreshSessionSchema = new Schema(
       type: String,
       required: true,
       unique: true,
+      index: true,
     },
 
     userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
 
     tokenHash: {
       type: String,
       required: true,
       unique: true,
+      select: false,
+    },
+
+    deviceName: {
+      type: String,
+      trim: true,
+      maxlength: 200,
+      default: "Unknown device",
+    },
+
+    ipAddress: {
+      type: String,
+      default: null,
+    },
+
+    userAgent: {
+      type: String,
+      default: null,
+    },
+
+    lastActiveAt: {
+      type: Date,
+      default: Date.now,
     },
 
     expiresAt: {
@@ -34,11 +59,17 @@ const refreshSessionSchema = new Schema(
   }
 );
 
-// TTL index for automatic expiration
+// Automatically remove expired sessions.
 refreshSessionSchema.index(
   { expiresAt: 1 },
   { expireAfterSeconds: 0 }
 );
+
+// Efficiently retrieve sessions belonging to a user.
+refreshSessionSchema.index({
+  userId: 1,
+  expiresAt: 1,
+});
 
 export type RefreshSession =
   InferSchemaType<typeof refreshSessionSchema>;

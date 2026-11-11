@@ -1,18 +1,18 @@
 import type { Response } from "express";
-import type { AuthenticatedRequest } from "../middleware/authenticate.ts";
+import type { AuthenticatedRequest } from "../../middleware/authenticate.ts";
 
 import {
 deleteContent,
 getContent,
 listContent,
 updateContent,
-} from "../services/content/contentAdminService.ts";
+} from "../../services/content/contentAdminService.ts";
 
 import {
 validateContentIdentifier,
 validateDeleteContentBody,
 validateUpdateContentBody,
-} from "../utils/validation/contentValidation.ts";
+} from "../../utils/validation/contentValidation.ts";
 
 export async function listContentController(
 _req: AuthenticatedRequest,

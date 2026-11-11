@@ -9,6 +9,7 @@ import morgan from "morgan";
 import { errorHandler } from "./middleware/errorHandler.ts";
 
 import authRoutes from "./routes/authRoutes.ts";
+import twoFactorRoutes from "./routes/twoFactorRoutes.ts";
 import adminRoutes from "./routes/adminRoutes.ts";
 import contactRoutes from "./routes/contactRoutes.ts";
 import contactMessageAdminRoutes from "./routes/contactMessageAdminRoutes.ts";
@@ -17,6 +18,9 @@ import managedContentRoutes from "./routes/managedContentRoutes.ts";
 import managedContentPublicRoutes from "./routes/managedContentPublicRoutes.ts";
 import cloudinaryRoutes from "./routes/cloudinaryRoutes.ts";
 import auditRoutes from "./routes/auditRoutes.ts";
+import systemHealthRoutes from "./routes/systemHealthRoutes.ts";
+import securitySettingsRoutes from "./routes/securitySettingsRoutes.ts";
+import profileRoutes from "./routes/profileRoutes.ts";
 
 const app: Application = express();
 
@@ -68,11 +72,14 @@ if (process.env.NODE_ENV !== "production") {
 
 /* API Routes */
 app.use("/api/auth", authRoutes);
+app.use("/api/auth/2fa", twoFactorRoutes);
 
 // Specific admin routes first
 app.use("/api/admin/contact-messages", contactMessageAdminRoutes);
 app.use("/api/admin/content", contentAdminRoutes);
 app.use("/api/admin/managed-content", managedContentRoutes);
+app.use("/api/admin/system/health", systemHealthRoutes);
+app.use("/api/admin/security-settings", securitySettingsRoutes);
 
 // General admin routes last
 app.use("/api/admin", adminRoutes);
@@ -81,6 +88,7 @@ app.use("/api/contact", contactRoutes);
 app.use("/api/content", managedContentPublicRoutes);
 app.use("/api/media", cloudinaryRoutes);
 app.use("/api/audit", auditRoutes);
+app.use("/api/profile", profileRoutes);
 
 /* Health Check */
 app.get("/api/health", (_req: Request, res: Response) => {

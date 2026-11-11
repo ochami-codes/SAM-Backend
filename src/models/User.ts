@@ -23,6 +23,11 @@ const userSchema = new Schema(
       trim: true,
     },
 
+     profileImage: {
+  type: String,
+  default: null,
+},
+
     passwordHash: {
       type: String,
       required: true,
@@ -42,6 +47,48 @@ const userSchema = new Schema(
     mustChangePassword: {
       type: Boolean,
       default: false,
+    },
+
+    // Two-factor authentication
+    twoFactorEnabled: {
+      type: Boolean,
+      default: false,
+    },
+
+    twoFactorSecretEncrypted: {
+      type: String,
+      default: null,
+      select: false,
+    },
+
+    pendingTwoFactorSecretEncrypted: {
+      type: String,
+      default: null,
+      select: false,
+    },
+
+    pendingTwoFactorSecretExpiresAt: {
+      type: Date,
+      default: null,
+      select: false,
+    },
+
+    recoveryCodeHashes: {
+      type: [String],
+      default: [],
+      select: false,
+    },
+
+    twoFactorEnabledAt: {
+      type: Date,
+      default: null,
+    },
+
+    // Authentication security
+    authVersion: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
   },
   { timestamps: true }

@@ -1,12 +1,12 @@
 import type { Response } from "express";
 
-import type { AuthenticatedRequest } from "../middleware/authenticate.ts";
+import type { AuthenticatedRequest } from "../../middleware/authenticate.ts";
 
 import {
   validateManagedContentIdentifier,
   validateCreateManagedContentBody,
   validateUpdateManagedContentBody,
-} from "../utils/validation/managedContentValidation.ts";
+} from "../../utils/validation/managedContentValidation.ts";
 
 import {
   listManagedContent,
@@ -16,9 +16,9 @@ import {
   deleteManagedContent,
   publishManagedContent,
   unpublishManagedContent,
-} from "../services/content/managedContentService.ts";
+} from "../../services/content/managedContentService.ts";
 
-import { AppError } from "../errors/AppError.ts";
+import { AppError } from "../../errors/AppError.ts";
 
 export async function listManagedContentController(
   _req: AuthenticatedRequest,

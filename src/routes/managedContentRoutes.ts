@@ -8,12 +8,12 @@ import {
   deleteManagedContentController,
   publishManagedContentController,
   unpublishManagedContentController,
-} from "../controllers/managedContentAdminController.ts";
+} from "../controllers/content/managedContentAdminController.ts";
 
 import { authenticate } from "../middleware/authenticate.ts";
 import { authorize } from "../middleware/authorize.ts";
 import { asyncHandler } from "../middleware/asyncHandler.ts";
-import { createManagedContentMetadataController, getAllManagedContentMetadataController, updateManagedContentMetadataController } from "../controllers/managedContentMetadataController.ts";
+import { createManagedContentMetadataController, getAllManagedContentMetadataController, updateManagedContentMetadataController } from "../controllers/content/managedContentMetadataController.ts";
 
 const router = Router();
 

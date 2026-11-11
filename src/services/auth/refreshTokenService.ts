@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 
 import { UserModel } from "../../models/User.ts";
 import { RefreshSessionModel } from "../../models/refreshSession.ts";
+import { SecuritySettingsModel } from "../../models/SecuritySettings.ts";
 
 import {
   createAccessToken,
@@ -29,17 +30,18 @@ export async function refreshAccessToken(
     );
   }
 
-  // Hash the incoming refresh token
+  // Hash the incoming refresh token.
   const tokenHash = crypto
     .createHash("sha256")
     .update(refreshToken)
     .digest("hex");
 
-  // Find the session belonging to this refresh token
+  // Find the session belonging to this refresh token.
   const session = await RefreshSessionModel.findOne({
-    sessionId: payload.sessionId,
-    tokenHash,
-  });
+  sessionId: payload.sessionId,
+  userId: payload.userId,
+  tokenHash,
+}).select("+tokenHash");
 
   if (!session) {
     throw new AppError(
@@ -49,7 +51,7 @@ export async function refreshAccessToken(
     );
   }
 
-  // Make sure the session itself has not expired
+  // Make sure the session itself has not expired.
   if (session.expiresAt <= new Date()) {
     await RefreshSessionModel.deleteOne({
       _id: session._id,
@@ -73,6 +75,10 @@ export async function refreshAccessToken(
   }
 
   if (!user.isActive) {
+    await RefreshSessionModel.deleteOne({
+      _id: session._id,
+    });
+
     throw new AppError(
       "Account is inactive",
       403,
@@ -80,28 +86,53 @@ export async function refreshAccessToken(
     );
   }
 
-  // Create a new refresh token for the same session
+  // Check the global security policy.
+  const securitySettings = await SecuritySettingsModel.findOne({
+    key: "global",
+  }).select("requireTwoFactor");
+
+  const requiresTwoFactor =
+    securitySettings?.requireTwoFactor ?? false;
+
+  // Prevent unenrolled administrators from refreshing sessions
+  // when global 2FA enforcement is active.
+  if (requiresTwoFactor && !user.twoFactorEnabled) {
+    await RefreshSessionModel.deleteOne({
+      _id: session._id,
+    });
+
+    throw new AppError(
+      "Two-factor authentication enrollment is required. Please log in and complete enrollment.",
+      403,
+      "TWO_FACTOR_ENROLLMENT_REQUIRED"
+    );
+  }
+
+  // Create a new refresh token for the same session.
   const newRefreshToken = createRefreshToken({
     userId: user._id.toString(),
     sessionId: session.sessionId,
   });
 
-  // Hash the new refresh token
+  // Hash the new refresh token.
   const newTokenHash = crypto
     .createHash("sha256")
     .update(newRefreshToken)
     .digest("hex");
 
-  // Replace the old refresh token with the new one
-  session.tokenHash = newTokenHash;
+  // Replace the old refresh token with the new one.
+session.tokenHash = newTokenHash;
+session.lastActiveAt = new Date();
 
-  await session.save();
+await session.save();
 
-  // Create a new access token
+  // Create a new access token.
   const accessToken = createAccessToken({
-    userId: user._id.toString(),
-    role: user.role,
-  });
+  userId: user._id.toString(),
+  sessionId: session.sessionId,
+  role: user.role,
+  authVersion: user.authVersion,
+});
 
   return {
     accessToken,

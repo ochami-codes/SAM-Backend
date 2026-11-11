@@ -8,7 +8,7 @@ import {
   updateContentController,
   deleteContentController,
   listContentController,
-} from "../controllers/contentAdminController.ts";
+} from "../controllers/content/contentAdminController.ts";
 
 const router = Router();
 

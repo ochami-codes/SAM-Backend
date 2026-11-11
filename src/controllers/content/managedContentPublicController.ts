@@ -2,11 +2,11 @@ import type { Request, Response } from "express";
 
 import {
   listPublishedManagedContent,
-} from "../services/content/managedContentService.ts";
+} from "../../services/content/managedContentService.ts";
 
 import {
   ContentMetadataModel,
-} from "../models/ContentMetadata.ts";
+} from "../../models/ContentMetadata.ts";
 
 export async function listPublishedManagedContentController(
   req: Request,

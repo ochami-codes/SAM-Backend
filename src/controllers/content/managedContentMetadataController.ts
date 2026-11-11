@@ -3,14 +3,14 @@ import type {
   Response,
   NextFunction,
 } from "express";
-import type { AuthenticatedRequest } from "../middleware/authenticate.ts";
+import type { AuthenticatedRequest } from "../../middleware/authenticate.ts";
 
 import {
   getPublishedContentMetadata,
 
-} from "../services/content/managedContentMetadataService.ts";
-import { AppError } from "../errors/AppError.ts";
-import { createContentMetadata, getAllContentMetadata, updateContentMetadata } from "../services/content/contentMetadataService.ts";
+} from "../../services/content/managedContentMetadataService.ts";
+import { AppError } from "../../errors/AppError.ts";
+import { createContentMetadata, getAllContentMetadata, updateContentMetadata } from "../../services/content/contentMetadataService.ts";
 
 export async function getManagedContentMetadataController(
   _req: Request,

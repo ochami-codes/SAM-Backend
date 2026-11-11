@@ -6,7 +6,7 @@ export async function resetUserPassword(
   res: Response
 ): Promise<void> {
   const { token, password } = req.body;
-  console.log("Reset token:", token);
+  
   if (!token || !password) {
     throw new AppError(
       "Reset token and new password are required",

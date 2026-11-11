@@ -2,11 +2,11 @@ import type { Request, Response } from "express";
 
 import {
   validateManagedContentIdentifier,
-} from "../utils/validation/managedContentValidation.ts";
+} from "../../utils/validation/managedContentValidation.ts";
 
 import {
   getPublishedManagedContent,
-} from "../services/content/managedContentService.ts";
+} from "../../services/content/managedContentService.ts";
 
 export async function getPublishedArticleController( req: Request, res: Response ): Promise<void> {
    const identifier = validateManagedContentIdentifier( "articles", undefined, req.params.slug ); 
