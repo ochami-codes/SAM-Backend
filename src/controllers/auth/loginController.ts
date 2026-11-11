@@ -1,16 +1,9 @@
 import type { Response } from "express";
 
 import { loginUser } from "../../services/auth/authService.ts";
-<<<<<<< HEAD
 
-import type {
-  AuthenticatedRequest,
-} from "../../middleware/authenticate.ts";
-
-=======
 import { getClientIp } from "../../utils/getClientIp.ts";
 import type { AuthenticatedRequest } from "../../middleware/authenticate.ts";
->>>>>>> ac33210aa7d6b71e06c1912692a4ab67c0f98dd6
 import { AppError } from "../../errors/AppError.ts";
 
 const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
@@ -34,18 +27,6 @@ export async function login(
     );
   }
 
-<<<<<<< HEAD
-  const result = await loginUser(
-    {
-      email,
-      password,
-    },
-    {
-      ipAddress: req.ip,
-      userAgent: req.get("user-agent") ?? undefined,
-    }
-  );
-=======
 const result = await loginUser(
 {
 email,
