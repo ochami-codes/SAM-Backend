@@ -37,9 +37,7 @@ ipAddress: getClientIp(req),
 userAgent: req.get("user-agent") ?? undefined,
 }
 );
->>>>>>> ac33210aa7d6b71e06c1912692a4ab67c0f98dd6
-
-  // Case 1: Global 2FA enforcement requires enrollment.
+// Case 1: Global 2FA enforcement requires enrollment.
   if ("requiresTwoFactorEnrollment" in result) {
     res.status(200).json({
       success: true,
