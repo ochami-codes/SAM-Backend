@@ -70,11 +70,11 @@ export async function createAuthenticatedSession(
   const sessionId = crypto.randomUUID();
 
   const accessToken = createAccessToken({
-  userId,
-  sessionId,
-  role: user.role,
-  authVersion: user.authVersion,
-});
+    userId,
+    sessionId,
+    role: user.role,
+    authVersion: user.authVersion,
+  });
 
   const refreshToken = createRefreshToken({
     userId,
@@ -90,28 +90,16 @@ export async function createAuthenticatedSession(
     sessionId,
     userId: user._id,
     tokenHash,
+    deviceName: getDeviceName(auditContext.userAgent),
+    ipAddress: auditContext.ipAddress ?? null,
+    userAgent: auditContext.userAgent ?? null,
+    lastActiveAt: new Date(),
     expiresAt: new Date(
       Date.now() +
         REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000
     ),
   });
 
-  await RefreshSessionModel.create({
-  sessionId,
-  userId: user._id,
-  tokenHash,
-
-  deviceName: getDeviceName(auditContext.userAgent),
-  ipAddress: auditContext.ipAddress ?? null,
-  userAgent: auditContext.userAgent ?? null,
-
-  lastActiveAt: new Date(),
-
-  expiresAt: new Date(
-    Date.now() +
-      REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000
-  ),
-});
   return {
     user: getUserResponse(user),
     accessToken,
