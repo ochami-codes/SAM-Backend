@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-
+import { randomUUID } from "node:crypto";
 import { UserModel, type UserDocument } from "../../models/User.ts";
 import { RefreshSessionModel } from "../../models/refreshSession.ts";
 import { SecuritySettingsModel } from "../../models/SecuritySettings.ts";
@@ -205,12 +205,13 @@ export async function loginUser(
   // Case 1: Global enforcement is active, but the administrator
   // has not enrolled. Allow access only to enrollment endpoints.
   if (requiresTwoFactor && !user.twoFactorEnabled) {
-    const enrollmentToken = createAccessToken({
-      userId: user._id.toString(),
-      role: user.role,
-      authVersion: user.authVersion,
-      tokenPurpose: "two_factor_enrollment",
-    });
+   const enrollmentToken = createAccessToken({
+  userId: user._id.toString(),
+  sessionId: randomUUID(),
+  role: user.role,
+  authVersion: user.authVersion,
+  tokenPurpose: "two_factor_enrollment",
+});
 
     return {
       requiresTwoFactorEnrollment: true as const,

@@ -121,7 +121,7 @@ export async function verifyAndEnableTwoFactor(
   token: string
 ) {
   const user = await UserModel.findById(userId).select(
-    "+pendingTwoFactorSecretEncrypted"
+  "+pendingTwoFactorSecretEncrypted +pendingTwoFactorSecretExpiresAt"
   );
 
   if (!user) {
@@ -163,19 +163,27 @@ export async function verifyAndEnableTwoFactor(
   }
 
   if (expiresAt <= new Date()) {
-    await UserModel.updateOne(
-      {
-        _id: user._id,
-        twoFactorEnabled: false,
-        pendingTwoFactorSecretEncrypted: encryptedSecret,
-      },
-      {
-        $unset: {
-          pendingTwoFactorSecretEncrypted: 1,
-          pendingTwoFactorSecretExpiresAt: 1,
-        },
-      }
-    );
+   const result = await UserModel.updateOne(
+  {
+    _id: user._id,
+    isActive: true,
+    twoFactorEnabled: false,
+  },
+  {
+    $set: {
+      pendingTwoFactorSecretEncrypted: encryptedSecret,
+      pendingTwoFactorSecretExpiresAt: expiresAt,
+    },
+  }
+);
+
+if (result.modifiedCount !== 1) {
+  throw new AppError(
+    "Unable to save two-factor enrollment. Please try again.",
+    409,
+    "TWO_FACTOR_SETUP_CONFLICT"
+  );
+}
 
     throw new AppError(
       "Enrollment has expired. Please start again.",

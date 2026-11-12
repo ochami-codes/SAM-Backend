@@ -42,15 +42,31 @@ async function authenticateRequest(
   try {
     const payload = verifyAccessToken(token);
 
-    if (!allowUnenrolledTwoFactor && payload.tokenPurpose !== "access") {
-      return next(
-        new AppError(
-          "This token cannot access protected resources.",
-          403,
-          "INVALID_TOKEN_PURPOSE"
-        )
-      );
-    }
+// Standard protected routes accept only normal access tokens.
+if (!allowUnenrolledTwoFactor && payload.tokenPurpose !== "access") {
+  return next(
+    new AppError(
+      "This token cannot access protected resources.",
+      403,
+      "INVALID_TOKEN_PURPOSE"
+    )
+  );
+}
+
+// 2FA enrollment routes accept only access or enrollment tokens.
+if (
+  allowUnenrolledTwoFactor &&
+  payload.tokenPurpose !== "access" &&
+  payload.tokenPurpose !== "two_factor_enrollment"
+) {
+  return next(
+    new AppError(
+      "This token cannot access two-factor authentication settings.",
+      403,
+      "INVALID_TOKEN_PURPOSE"
+    )
+  );
+}
 
     const user = await UserModel.findById(payload.userId).select(
       "_id role isActive fullName email authVersion twoFactorEnabled"
