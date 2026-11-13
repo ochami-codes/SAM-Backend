@@ -1,42 +1,6 @@
-import { ManagedContentModel } from "../../models/ManagedContent.ts";
-import { ContentMetadataModel } from "../../models/ContentMetadata.ts";
-
-export interface MetadataItem {
-  name: string;
-  slug: string;
-  heroImage?: string;
-  isDefault?: boolean;
-}
-
-export interface ManagedContentMetadata {
-  sections: MetadataItem[];
-  categories: {
-    section: string;
-    categories: MetadataItem[];
-  }[];
-}
-
-function formatDisplayName(value: string): string {
-  return value
-    .trim()
-    .split("-")
-    .filter(Boolean)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-}
-
-function toMetadataItem(
-  value: string,
-  metadata?: { name: string; heroImage?: string }
-): MetadataItem {
-  return {
-    name: metadata?.name ?? formatDisplayName(value),
-    slug: value,
-    ...(metadata?.heroImage
-      ? { heroImage: metadata.heroImage }
-      : {}),
-  };
-}
+import { ContentMetadataModel } from "../../../models/ContentMetadata.ts";
+import { ManagedContentModel } from "../../../models/ManagedContent.ts";
+import { toMetadataItem, type ManagedContentMetadata } from "../contentMetadataService.ts";
 
 export async function getPublishedContentMetadata(): Promise<ManagedContentMetadata> {
   const [publishedSections, categoryGroups, metadataRecords] =
