@@ -29,7 +29,7 @@ const previousState = {
 title: content.title,
 section: content.section,
 slug: content.slug,
-category: content.category,
+category: content.category ?? null,
 status: content.status,
 };
 
@@ -83,7 +83,7 @@ newState: {
 title: content.title,
 section: content.section,
 slug: content.slug,
-category: content.category,
+category: content.category ?? null,
 status: content.status,
 },
 },
