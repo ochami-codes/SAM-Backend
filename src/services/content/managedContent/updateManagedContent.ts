@@ -33,6 +33,7 @@ const previousState = {
     category: content.category,
   }),
   status: content.status,
+
 };
 
 const identifierChanged =
@@ -83,6 +84,7 @@ description: `Updated managed content: ${content.title}`,
 metadata: {
 previousState,
 newState: {
+
   title: content.title,
   section: content.section,
   slug: content.slug,
