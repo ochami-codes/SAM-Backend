@@ -60,6 +60,19 @@ export function toContentData(
     ...(content.order !== undefined && {
       order: content.order,
     }),
+    ...(content.seo && {
+  seo: {
+    ...(content.seo.title && {
+      title: content.seo.title,
+    }),
+    ...(content.seo.description && {
+      description: content.seo.description,
+    }),
+    ...(content.seo.image && {
+      image: content.seo.image,
+    }),
+  },
+}),
     status: content.status,
     createdBy: content.createdBy.toString(),
     updatedBy: content.updatedBy.toString(),

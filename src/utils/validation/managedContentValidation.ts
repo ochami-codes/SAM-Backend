@@ -14,7 +14,11 @@ export interface ManagedContentIdentifier {
   category?: string;
   slug: string;
 }
-
+export interface ManagedContentSeo {
+  title?: string;
+  description?: string;
+  image?: string;
+}
 export interface CreateManagedContentBody {
   title: string;
   slug: string;
@@ -25,6 +29,7 @@ export interface CreateManagedContentBody {
   heroImage?: string;
   order?: number;
   status: ManagedContentStatus;
+  seo?: ManagedContentSeo;
 }
 
 export interface UpdateManagedContentBody {
@@ -36,6 +41,7 @@ export interface UpdateManagedContentBody {
   description?: string;
   heroImage?: string;
   order?: number;
+  seo?: ManagedContentSeo;
 }
 
 export function validateManagedContentIdentifier(
@@ -115,6 +121,7 @@ export function validateCreateManagedContentBody(
   const status = validateManagedContentStatus(
     data.status ?? "draft"
   );
+  const seo = validateOptionalSeo(data.seo);
 
   return {
     title,
@@ -126,6 +133,7 @@ export function validateCreateManagedContentBody(
     ...(heroImage !== undefined && { heroImage }),
     ...(order !== undefined && { order }),
     status,
+    ...(seo && { seo }),
   };
 }
 
@@ -163,6 +171,7 @@ export function validateUpdateManagedContentBody(
     500
   );
   const order = validateOptionalOrder(data.order);
+  const seo = validateOptionalSeo(data.seo);
 
   return {
     title,
@@ -172,6 +181,7 @@ export function validateUpdateManagedContentBody(
     content,
     ...(heroImage && { heroImage }),
     ...(order !== undefined && { order }),
+    ...(seo && { seo }),
   };
 }
 
@@ -304,4 +314,41 @@ function validateOptionalString(
     required: false,
     maxLength,
   });
+}
+function validateOptionalSeo(
+  value: unknown
+): ManagedContentSeo | undefined {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+
+  const data = validateObject(value);
+
+  const title = validateOptionalString(
+    data.title,
+    "seo.title",
+    200
+  );
+
+  const description = validateOptionalString(
+    data.description,
+    "seo.description",
+    300
+  );
+
+  const image = validateOptionalString(
+    data.image,
+    "seo.image",
+    500
+  );
+
+  const seo: ManagedContentSeo = {
+    ...(title !== undefined && { title }),
+    ...(description !== undefined && { description }),
+    ...(image !== undefined && { image }),
+  };
+
+  return Object.keys(seo).length > 0
+    ? seo
+    : undefined;
 }

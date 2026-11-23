@@ -34,18 +34,19 @@ throw new AppError(
 const userObjectId = toObjectId(context.userId, "userId");
 
 const content = await ManagedContentModel.create({
-title: input.title,
-slug: input.slug,
-section: input.section,
-...(input.category && { category: input.category }),
-content: input.content,
-...(input.description && { description: input.description }),
-...(input.heroImage && { heroImage: input.heroImage }),
-...(input.order !== undefined && { order: input.order }),
-status: input.status,
-createdBy: userObjectId,
-updatedBy: userObjectId,
-...(input.status === "published" && { publishedAt: new Date() }),
+  title: input.title,
+  slug: input.slug,
+  section: input.section,
+  ...(input.category && { category: input.category }),
+  content: input.content,
+  ...(input.description && { description: input.description }),
+  ...(input.heroImage && { heroImage: input.heroImage }),
+  ...(input.order !== undefined && { order: input.order }),
+  ...(input.seo && { seo: input.seo }),
+  status: input.status,
+  createdBy: userObjectId,
+  updatedBy: userObjectId,
+  ...(input.status === "published" && { publishedAt: new Date() }),
 });
 
 if (!content) {

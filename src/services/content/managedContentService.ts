@@ -35,6 +35,11 @@ export interface ManagedContentData {
   description?: string;
   heroImage?: string;
   order?: number;
+  seo?: {
+  title?: string;
+  description?: string;
+  image?: string;
+};
   status: IManagedContent["status"];
   createdBy: string;
   updatedBy: string;

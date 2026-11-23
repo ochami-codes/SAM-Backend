@@ -8,6 +8,11 @@ export const managedContentStatuses = [
 
 export type ManagedContentStatus =
   (typeof managedContentStatuses)[number];
+  export interface IContentSeo {
+  title?: string;
+  description?: string;
+  image?: string;
+}
 
 export interface IManagedContent {
   title: string;
@@ -18,6 +23,7 @@ export interface IManagedContent {
   description?: string;
   heroImage?: string;
   order?: number;
+  seo?: IContentSeo;
   status: ManagedContentStatus;
   createdBy: mongoose.Types.ObjectId;
   updatedBy: mongoose.Types.ObjectId;
@@ -82,6 +88,24 @@ const managedContentSchema =
   validate: {
     validator: Number.isInteger,
     message: "Content order must be an integer",
+  },
+},
+seo: {
+  title: {
+    type: String,
+    trim: true,
+    maxlength: 200,
+  },
+
+  description: {
+    type: String,
+    trim: true,
+    maxlength: 300,
+  },
+
+  image: {
+    type: String,
+    trim: true,
   },
 },
 

@@ -21,6 +21,8 @@ import auditRoutes from "./routes/auditRoutes.ts";
 import systemHealthRoutes from "./routes/systemHealthRoutes.ts";
 import securitySettingsRoutes from "./routes/securitySettingsRoutes.ts";
 import profileRoutes from "./routes/profileRoutes.ts";
+import seoRoutes from "./routes/seoRoutes.ts";
+import publicSeoRoutes from "./routes/publicSeoRoutes.ts";
 
 const app: Application = express();
 
@@ -92,7 +94,8 @@ app.use("/api/content", managedContentPublicRoutes);
 app.use("/api/media", cloudinaryRoutes);
 app.use("/api/audit", auditRoutes);
 app.use("/api/profile", profileRoutes);
-
+app.use("/api/seo", seoRoutes);
+app.use("/api/public/seo", publicSeoRoutes);
 
 /* Health Check */
 app.get("/api/health", (_req: Request, res: Response) => {

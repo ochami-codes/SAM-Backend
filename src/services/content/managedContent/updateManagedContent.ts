@@ -26,11 +26,13 @@ throw new AppError("Managed content not found", 404, "CONTENT_NOT_FOUND");
 }
 
 const previousState = {
-title: content.title,
-section: content.section,
-slug: content.slug,
-category: content.category,
-status: content.status,
+  title: content.title,
+  section: content.section,
+  slug: content.slug,
+  ...(content.category && {
+    category: content.category,
+  }),
+  status: content.status,
 };
 
 const identifierChanged =
@@ -57,17 +59,18 @@ if (duplicate && duplicate._id.toString() !== content._id.toString()) {
 }
 
 Object.assign(content, {
-...(input.title !== undefined && { title: input.title }),
-...(input.slug !== undefined && { slug: input.slug }),
-...(input.section !== undefined && { section: input.section }),
-...(input.category !== undefined && { category: input.category }),
-...(input.content !== undefined && { content: input.content }),
-...(input.description !== undefined && {
-description: input.description,
-}),
-...(input.heroImage !== undefined && { heroImage: input.heroImage }),
-...(input.order !== undefined && { order: input.order }),
-updatedBy: context.userId,
+  ...(input.title !== undefined && { title: input.title }),
+  ...(input.slug !== undefined && { slug: input.slug }),
+  ...(input.section !== undefined && { section: input.section }),
+  ...(input.category !== undefined && { category: input.category }),
+  ...(input.content !== undefined && { content: input.content }),
+  ...(input.description !== undefined && {
+    description: input.description,
+  }),
+  ...(input.heroImage !== undefined && { heroImage: input.heroImage }),
+  ...(input.order !== undefined && { order: input.order }),
+  ...(input.seo !== undefined && { seo: input.seo }),
+  updatedBy: context.userId,
 });
 
 await content.save();
@@ -80,11 +83,13 @@ description: `Updated managed content: ${content.title}`,
 metadata: {
 previousState,
 newState: {
-title: content.title,
-section: content.section,
-slug: content.slug,
-category: content.category,
-status: content.status,
+  title: content.title,
+  section: content.section,
+  slug: content.slug,
+  ...(content.category && {
+    category: content.category,
+  }),
+  status: content.status,
 },
 },
 });
